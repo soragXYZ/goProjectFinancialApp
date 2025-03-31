@@ -1,0 +1,5 @@
+https://webview.powens.com/connect
+  ?domain={domain}
+  &client_id={clientId} (dans pannel admin)
+  &redirect_uri={yourCallbackUri}
+  &code={temporaryCode}
