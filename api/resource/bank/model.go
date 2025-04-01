@@ -1,17 +1,11 @@
 package bank
 
 import (
+	"financialApp/api/resource/miscellaneous"
 	"time"
 )
 
 // Models taken from https://docs.powens.com/api-reference/products/data-aggregation/bank-accounts#data-model
-
-type Currency struct {
-	id        string
-	name      string
-	symbol    string
-	precision uint
-}
 
 type AccountType struct {
 	id             uint
@@ -61,7 +55,7 @@ type BankAccount struct {
 	deleted       time.Time
 	disabled      time.Time
 	iban          string
-	currency      Currency
+	currency      miscellaneous.Currency
 	account_type  AccountType
 	id_type       int
 	bookmarked    int
