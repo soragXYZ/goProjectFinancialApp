@@ -3,8 +3,8 @@ package auth
 // Models taken from https://docs.powens.com/api-reference/overview/authentication#data-model
 
 type AuthTokenInitRequest struct {
-	Client_id     string
-	Client_secret string
+	Client_id     string `json:"client_id"`
+	Client_secret string `json:"client_secret"`
 }
 
 type AuthToken struct {
