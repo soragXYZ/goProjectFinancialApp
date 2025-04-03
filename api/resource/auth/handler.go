@@ -12,8 +12,22 @@ import (
 )
 
 func CreatePermanentUserToken(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/auth/createPermanentUserToken/" {
+	if r.URL.Path != "/auth/permanentUserToken/" {
 		http.NotFound(w, r)
+		return
+	}
+
+	// check if one permanent user token already exists in DB or not
+	var entries uint
+	row := config.DB.QueryRow("SELECT EXISTS (SELECT 1 FROM authToken)")
+	if err := row.Scan(&entries); err != nil {
+		log.Fatal("SELECT EXISTS (SELECT 1 FROM authToken): %v", err)
+		http.Error(w, "Error in SELECT EXISTS (SELECT 1 FROM authToken)", http.StatusInternalServerError)
+		return
+	}
+
+	if entries != 0 {
+		http.Error(w, "Permanent user token already exists", http.StatusConflict)
 		return
 	}
 
@@ -54,12 +68,17 @@ func CreatePermanentUserToken(w http.ResponseWriter, r *http.Request) {
 		log.Fatal("INSERT INTO authToken: %v", err)
 	}
 
-	return
+	jsonBody, err = json.Marshal(authToken)
+	if err != nil {
+		log.Fatal(err)
+	}
+	w.WriteHeader(http.StatusCreated)
+	w.Write(jsonBody)
 
 }
 
 func GetPermanentUserToken(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/auth/getPermanentUserToken/" {
+	if r.URL.Path != "/auth/permanentUserToken/" {
 		http.NotFound(w, r)
 		return
 	}
@@ -67,7 +86,6 @@ func GetPermanentUserToken(w http.ResponseWriter, r *http.Request) {
 	var authToken AuthToken
 
 	row := config.DB.QueryRow("SELECT * FROM authToken LIMIT 1")
-	// check syntax why err at the end with ;
 	if err := row.Scan(&authToken.Auth_token, &authToken.Token_type, &authToken.Id_user, &authToken.Expires_in); err != nil {
 		if err == sql.ErrNoRows {
 			http.Error(w, "Token does not exist", http.StatusNotFound)
@@ -76,6 +94,7 @@ func GetPermanentUserToken(w http.ResponseWriter, r *http.Request) {
 
 		log.Fatal("SELECT TOP 1 * FROM authToken: %v", err)
 		http.Error(w, "Error in select top 1", http.StatusInternalServerError)
+		return
 	}
 
 	jsonBody, err := json.Marshal(authToken)
@@ -83,4 +102,18 @@ func GetPermanentUserToken(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 	w.Write(jsonBody)
+}
+
+func DeletePermanentUserToken(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/auth/permanentUserToken/" {
+		http.NotFound(w, r)
+		return
+	}
+
+	_, err := config.DB.Exec("DELETE from authToken")
+	if err != nil {
+		log.Fatal("DELETE authToken: %v", err)
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }

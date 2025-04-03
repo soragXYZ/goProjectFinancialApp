@@ -11,11 +11,11 @@ import (
 
 func New() {
 
-	http.HandleFunc("/health/", health.HealthCheck)
+	http.HandleFunc("GET /health/", health.HealthCheck)
 
-	// should be changed in GET POST DELETE
-	http.HandleFunc("/auth/createPermanentUserToken/", auth.CreatePermanentUserToken)
-	http.HandleFunc("/auth/getPermanentUserToken/", auth.GetPermanentUserToken)
+	http.HandleFunc("POST /auth/permanentUserToken/", auth.CreatePermanentUserToken)
+	http.HandleFunc("GET /auth/permanentUserToken/", auth.GetPermanentUserToken)
+	http.HandleFunc("DELETE /auth/permanentUserToken/", auth.DeletePermanentUserToken)
 
 	fmt.Println("Server running...")
 	log.Fatal(http.ListenAndServe(":8080", nil))
