@@ -19,10 +19,10 @@ type AuthToken struct {
 // }
 
 type AuthCode struct {
-	code       string
-	code_type  string
-	access     string
-	expires_in int
+	Auth_Code   string `json:"code"`
+	Code_type   string `json:"type"`
+	Access_type string `json:"access"`
+	Expires_in  int    `json:"expires_in"`
 }
 
 type AuthTokenExchangeRequest struct {

@@ -1,4 +1,4 @@
-package health
+package miscellaneous
 
 import (
 	"net/http"
