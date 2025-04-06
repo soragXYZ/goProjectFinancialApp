@@ -14,7 +14,7 @@ func New() {
 
 	http.HandleFunc("GET /health/", miscellaneous.HealthCheck)
 
-	http.HandleFunc("POST /auth/webhook/", webhook.Webhook)
+	http.HandleFunc("POST /webhook/connection_synced/", webhook.ConnectionSynced)
 
 	http.HandleFunc("POST /auth/permanentUserToken/", auth.CreatePermanentUserToken)
 	http.HandleFunc("GET /auth/permanentUserToken/", auth.GetPermanentUserToken)
