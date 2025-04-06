@@ -2,86 +2,53 @@ package bank
 
 import (
 	"financialApp/api/resource/miscellaneous"
+	"financialApp/api/resource/transaction"
 	"time"
 )
 
 // Models taken from https://docs.powens.com/api-reference/products/data-aggregation/bank-accounts#data-model
 
-type AccountType struct {
-	id             uint
-	name           string
-	id_parent      uint
-	is_invest      bool
-	display_name   string
-	display_name_p string
-}
+// Time sent by Powens API is not RFC3339
+// so we store it as string
+// https://stackoverflow.com/questions/25087960/json-unmarshal-time-that-isnt-in-rfc-3339-format
 
+// https://docs.powens.com/api-reference/products/data-aggregation/bank-accounts#loan-object
 type Loan struct {
-	total_amount         float32
-	available_amount     float32
-	used_amount          float32
-	subscription_date    time.Time
-	maturity_date        time.Time
-	start_repayment_date time.Time
-	deferred             bool
-	next_payment_amount  float32
-	next_payment_date    time.Time
-	rate                 float32
-	nb_payments_left     uint
-	nb_payments_done     uint
-	nb_payments_total    uint
-	last_payment_amount  float32
-	last_payment_date    time.Time
-	account_label        string
-	insurance_label      string
-	insurance_amount     string
-	insurance_rate       float32
-	duration             uint
-	loan_type            string
+	Total_amount         float32   `json:"total_amount"`
+	Available_amount     float32   `json:"available_amount"`
+	Used_amount          float32   `json:"used_amount"`
+	Subscription_date    time.Time `json:"subscription_date"`
+	Maturity_date        time.Time `json:"maturity_date"`
+	Start_repayment_date time.Time `json:"start_repayment_date"`
+	Deferred             bool      `json:"deferred"`
+	Next_payment_amount  float32   `json:"next_payment_amount"`
+	Next_payment_date    time.Time `json:"next_payment_date"`
+	Rate                 float32   `json:"rate"`
+	Nb_payments_left     uint      `json:"nb_payments_left"`
+	Nb_payments_done     uint      `json:"nb_payments_done"`
+	Nb_payments_total    uint      `json:"nb_payments_total"`
+	Last_payment_amount  float32   `json:"last_payment_amount"`
+	Last_payment_date    time.Time `json:"last_payment_date"`
+	Account_label        string    `json:"account_label"`
+	Insurance_label      string    `json:"insurance_label"`
+	Insurance_amount     string    `json:"insurance_amount"`
+	Insurance_rate       float32   `json:"insurance_rate"`
+	Duration             uint      `json:"duration"`
+	Loan_type            string    `json:"loan_type"`
 }
 
+// https://docs.powens.com/api-reference/products/data-aggregation/bank-accounts#bankaccount-object
 type BankAccount struct {
-	id            int
-	id_connection int
-	id_user       int
-	id_source     int
-	id_parent     int
-	number        string
-	original_name string
-	balance       float32
-	coming        float32
-	display       bool
-	last_update   time.Time
-	deleted       time.Time
-	disabled      time.Time
-	iban          string
-	currency      miscellaneous.Currency
-	account_type  AccountType
-	id_type       int
-	bookmarked    int
-	name          string
-	error         string
-	usage         string
-	company_name  string
-	loan          Loan
-}
-
-type Balance struct {
-	currency string
-	amount   float32
-}
-
-type BankAccountsList struct {
-	balance         float32
-	accounts        []BankAccount
-	balances        []Balance
-	coming_balances []Balance
-}
-
-type BankAccountUpdateRequest struct {
-	display    bool
-	name       string
-	disabled   bool
-	bookmarked bool
-	usage      string
+	Id_user       int                       `json:"id_user"`
+	Number        string                    `json:"number"`
+	Original_name string                    `json:"original_name"`
+	Balance       float32                   `json:"balance"`
+	Last_update   string                    `json:"last_update"`
+	Iban          string                    `json:"iban"`
+	Currency      miscellaneous.Currency    `json:"currency"`
+	Account_type  string                    `json:"type"`
+	Error         string                    `json:"error"`
+	Usage         string                    `json:"usage"`
+	Loan          Loan                      `json:"loan"`
+	Transactions  []transaction.Transaction `json:"transactions"`
 }

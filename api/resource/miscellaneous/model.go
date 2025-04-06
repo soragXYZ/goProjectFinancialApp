@@ -1,19 +1,14 @@
 package miscellaneous
 
-type Category struct {
-	code        string
-	parent_code string
-}
-
+// https://docs.powens.com/api-reference/products/data-aggregation/currencies#currency-object
 type Currency struct {
-	id        string
-	name      string
-	symbol    string
-	precision uint
+	Id        string `json:"id"`
+	Name      string `json:"name"`
+	Symbol    string `json:"symbol"`
+	Precision uint   `json:"precision"`
 }
 
-type PaginationLinks struct {
-	self string
-	prev string
-	next string
+type User struct {
+	Id     int    `json:"id"`
+	Signin string `json:"signin"`
 }

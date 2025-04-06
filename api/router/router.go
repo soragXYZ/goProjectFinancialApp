@@ -7,13 +7,14 @@ import (
 
 	"financialApp/api/resource/auth"
 	"financialApp/api/resource/miscellaneous"
+	"financialApp/api/resource/webhook"
 )
 
 func New() {
 
 	http.HandleFunc("GET /health/", miscellaneous.HealthCheck)
 
-	http.HandleFunc("POST /auth/webhook/", auth.Webhook)
+	http.HandleFunc("POST /auth/webhook/", webhook.Webhook)
 
 	http.HandleFunc("POST /auth/permanentUserToken/", auth.CreatePermanentUserToken)
 	http.HandleFunc("GET /auth/permanentUserToken/", auth.GetPermanentUserToken)

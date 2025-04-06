@@ -5,24 +5,12 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"os"
 
 	"financialApp/config"
 )
-
-func Webhook(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("WEBhook, yay")
-
-	responseData, err := io.ReadAll(r.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-	ret := string(responseData)
-	fmt.Println(ret)
-}
 
 func CreatePermanentUserToken(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/auth/permanentUserToken/" {
@@ -74,8 +62,8 @@ func CreatePermanentUserToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_, err = config.DB.Exec(
-		"INSERT INTO authToken (auth_token, token_type, id_user, expires_in) VALUES (?, ?, ?, ?)",
-		authToken.Auth_token, authToken.Token_type, authToken.Id_user, authToken.Expires_in,
+		"INSERT INTO authToken (auth_token, id_user) VALUES (?, ?)",
+		authToken.Auth_token, authToken.Id_user,
 	)
 	if err != nil {
 		log.Fatal("INSERT INTO authToken: %v", err)
@@ -145,8 +133,8 @@ func CreateTemporaryUserToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_, err = config.DB.Exec(
-		"INSERT INTO authCode (auth_code, code_type, access_type, expires_in) VALUES (?, ?, ?, ?)",
-		authCode.Auth_Code, authCode.Code_type, authCode.Access_type, authCode.Expires_in,
+		"INSERT INTO authCode (auth_code, expires_in) VALUES (?, ?)",
+		authCode.Auth_Code, authCode.Expires_in,
 	)
 	if err != nil {
 		log.Fatal("INSERT INTO authCode: %v", err)
@@ -169,7 +157,7 @@ func GetTemporaryUserToken(w http.ResponseWriter, r *http.Request) {
 	var authCode AuthCode
 
 	row := config.DB.QueryRow("SELECT * FROM authCode LIMIT 1")
-	if err := row.Scan(&authCode.Auth_Code, &authCode.Code_type, &authCode.Access_type, &authCode.Expires_in); err != nil {
+	if err := row.Scan(&authCode.Auth_Code, &authCode.Expires_in); err != nil {
 		if err == sql.ErrNoRows {
 			http.Error(w, "Token does not exist", http.StatusNotFound)
 			return
@@ -196,7 +184,7 @@ func GetPermanentUserToken(w http.ResponseWriter, r *http.Request) {
 	var authToken AuthToken
 
 	row := config.DB.QueryRow("SELECT * FROM authToken LIMIT 1")
-	if err := row.Scan(&authToken.Auth_token, &authToken.Token_type, &authToken.Id_user, &authToken.Expires_in); err != nil {
+	if err := row.Scan(&authToken.Auth_token, &authToken.Id_user); err != nil {
 		if err == sql.ErrNoRows {
 			http.Error(w, "Token does not exist", http.StatusNotFound)
 			return
