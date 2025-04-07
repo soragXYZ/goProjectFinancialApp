@@ -2,6 +2,7 @@ package webhook
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -34,6 +35,7 @@ func ConnectionSynced(w http.ResponseWriter, r *http.Request) {
 
 		for _, tx := range account.Transactions {
 
+			fmt.Println(tx.Id, tx.Bank_id, tx.Datetime, tx.Value, tx.Transaction_type, tx.Original_wording)
 			// toDo: should bulk INSERT and verify duplicate on insert ?
 			_, err = config.DB.Exec(
 				"INSERT INTO tx (tx_id, bank_id, tx_datetime, tx_value, tx_type, original_wording) VALUES (?, ?, ?, ?, ?, ?)",

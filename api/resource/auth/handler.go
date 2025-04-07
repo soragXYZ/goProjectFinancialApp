@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -106,7 +105,6 @@ func CreateTemporaryUserToken(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 	req.Header.Add("Authorization", bearer)
-	fmt.Println(bearer)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)

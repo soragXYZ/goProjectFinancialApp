@@ -1,28 +1,32 @@
 package router
 
 import (
-	"fmt"
-	"log"
 	"net/http"
 
 	"financialApp/api/resource/auth"
 	"financialApp/api/resource/miscellaneous"
+	"financialApp/api/resource/transaction"
 	"financialApp/api/resource/webhook"
 )
 
-func New() {
+func New() *http.ServeMux {
 
-	http.HandleFunc("GET /health/", miscellaneous.HealthCheck)
+	// to do: dispatch routes in submodules
+	// https://dev.to/kengowada/go-routing-101-handling-and-grouping-routes-with-nethttp-4k0e
 
-	http.HandleFunc("POST /webhook/connection_synced/", webhook.ConnectionSynced)
+	router := http.NewServeMux()
+	router.HandleFunc("GET /health/", miscellaneous.HealthCheck)
 
-	http.HandleFunc("POST /auth/permanentUserToken/", auth.CreatePermanentUserToken)
-	http.HandleFunc("GET /auth/permanentUserToken/", auth.GetPermanentUserToken)
-	http.HandleFunc("DELETE /auth/permanentUserToken/", auth.DeletePermanentUserToken)
+	router.HandleFunc("POST /webhook/connection_synced/", webhook.ConnectionSynced)
 
-	http.HandleFunc("POST /auth/temporaryUserToken/", auth.CreateTemporaryUserToken)
-	http.HandleFunc("GET /auth/temporaryUserToken/", auth.GetTemporaryUserToken)
+	router.HandleFunc("GET /transaction/", transaction.GetTransactions)
 
-	fmt.Println("Server running...")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	router.HandleFunc("POST /auth/permanentUserToken/", auth.CreatePermanentUserToken)
+	router.HandleFunc("GET /auth/permanentUserToken/", auth.GetPermanentUserToken)
+	router.HandleFunc("DELETE /auth/permanentUserToken/", auth.DeletePermanentUserToken)
+
+	router.HandleFunc("POST /auth/temporaryUserToken/", auth.CreateTemporaryUserToken)
+	router.HandleFunc("GET /auth/temporaryUserToken/", auth.GetTemporaryUserToken)
+
+	return router
 }
