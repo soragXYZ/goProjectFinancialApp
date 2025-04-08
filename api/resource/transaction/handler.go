@@ -28,7 +28,7 @@ func GetTransactions(w http.ResponseWriter, r *http.Request) {
 
 	var txs []Transaction
 
-	var query string = "SELECT * FROM tx ORDER BY tx_datetime DESC LIMIT ? OFFSET ?"
+	var query string = "SELECT * FROM tx ORDER BY tx_date DESC LIMIT ? OFFSET ?"
 	rows, err := config.DB.Query(query, limit, offset)
 	if err != nil {
 		config.Logger.Error().Err(err).Msg(query)
@@ -39,7 +39,7 @@ func GetTransactions(w http.ResponseWriter, r *http.Request) {
 
 	for rows.Next() {
 		var tx Transaction
-		if err := rows.Scan(&tx.Id, &tx.Bank_id, &tx.Datetime, &tx.Value, &tx.Transaction_type, &tx.Original_wording); err != nil {
+		if err := rows.Scan(&tx.Id, &tx.Bank_id, &tx.Date, &tx.Value, &tx.Transaction_type, &tx.Original_wording); err != nil {
 			config.Logger.Error().Err(err).Msg("Cannot scan row")
 			http.Error(w, "", http.StatusInternalServerError)
 			return

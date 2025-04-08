@@ -1,6 +1,6 @@
 - Replace expires_in by datetime auto ??
-- bulk insert in webhook tx
 - Write unit tests
 - Write documentation and README
 - Form validation ?
 - godoc / swagger ?
+- check why someone requesting / and .git/config

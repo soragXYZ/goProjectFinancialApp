@@ -6,7 +6,7 @@ package transaction
 type Transaction struct {
 	Id               int     `json:"id"`
 	Bank_id          int     `json:"id_account"`
-	Datetime         string  `json:"datetime"`
+	Date             string  `json:"date"`
 	Value            float32 `json:"value"`
 	Transaction_type string  `json:"type"`
 	Original_wording string  `json:"original_wording"`
