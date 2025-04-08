@@ -2,7 +2,6 @@ package webhook
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"financialApp/config"
@@ -33,10 +32,6 @@ func ConnectionSynced(w http.ResponseWriter, r *http.Request) {
 		}
 
 		for _, tx := range account.Transactions {
-
-			// To be deleted when the issue is solved
-			fmt.Println(tx.Id, tx.Bank_id, tx.Datetime, tx.Value, tx.Transaction_type, tx.Original_wording)
-
 			// toDo: should bulk INSERT and verify duplicate on insert ?
 			query = "INSERT INTO tx (tx_id, bank_id, tx_datetime, tx_value, tx_type, original_wording) VALUES (?, ?, ?, ?, ?, ?)"
 			_, err = config.DB.Exec(query, tx.Id, tx.Bank_id, tx.Datetime, tx.Value, tx.Transaction_type, tx.Original_wording)
