@@ -27,6 +27,9 @@ func main() {
 		IdleTimeout:  config.Conf.Server.TimeoutIdle,
 	}
 
+	// Correct way to handle a server shutdown
+	// https://dev.to/mokiat/proper-http-shutdown-in-go-3fji
+
 	closed := make(chan struct{})
 	go func() {
 		sigint := make(chan os.Signal, 1)

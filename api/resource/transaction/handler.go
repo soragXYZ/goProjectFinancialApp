@@ -2,7 +2,6 @@ package transaction
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"strconv"
 
@@ -10,11 +9,6 @@ import (
 )
 
 func GetTransactions(w http.ResponseWriter, r *http.Request) {
-
-	if r.URL.Path != "/transaction/" {
-		http.NotFound(w, r)
-		return
-	}
 
 	// To Do: Change from page-based to cursor-based pagination
 	// https://www.merge.dev/blog/rest-api-pagination
@@ -34,27 +28,35 @@ func GetTransactions(w http.ResponseWriter, r *http.Request) {
 
 	var txs []Transaction
 
-	rows, err := config.DB.Query("SELECT * FROM tx ORDER BY tx_datetime DESC LIMIT ? OFFSET ?", limit, offset)
+	var query string = "SELECT * FROM tx ORDER BY tx_datetime DESC LIMIT ? OFFSET ?"
+	rows, err := config.DB.Query(query, limit, offset)
 	if err != nil {
-		log.Fatal(err)
+		config.Logger.Error().Err(err).Msg(query)
+		http.Error(w, "", http.StatusInternalServerError)
+		return
 	}
 	defer rows.Close()
 
 	for rows.Next() {
 		var tx Transaction
 		if err := rows.Scan(&tx.Id, &tx.Bank_id, &tx.Datetime, &tx.Value, &tx.Transaction_type, &tx.Original_wording); err != nil {
-			log.Fatal(err)
+			config.Logger.Error().Err(err).Msg("Cannot scan row")
+			http.Error(w, "", http.StatusInternalServerError)
+			return
 		}
 		txs = append(txs, tx)
 	}
 	if err := rows.Err(); err != nil {
-		log.Fatal(err)
+		config.Logger.Error().Err(err).Msg("Error in rows")
+		http.Error(w, "", http.StatusInternalServerError)
+		return
 	}
 
 	jsonBody, err := json.Marshal(txs)
 	if err != nil {
-		log.Fatal(err)
+		config.Logger.Error().Err(err).Msg("Cannot marshal txs")
+		http.Error(w, "", http.StatusInternalServerError)
+		return
 	}
 	w.Write(jsonBody)
-
 }

@@ -2,6 +2,5 @@
 - bulk insert in webhook tx
 - Write unit tests
 - Write documentation and README
-- Middleware to log every request (TRACE, DEBUG ?)
 - Form validation ?
 - godoc / swagger ?

@@ -42,12 +42,11 @@ type ConfStruct struct {
 
 func Init() {
 
-	// Read env values from .env. Remove this part if your envs are exported from somewhere else
+	// Read env values from .env. Remove these 3 lines if your envs are exported from somewhere else, like Dockerfile for example
 	err := godotenv.Load()
 	if err != nil {
 		Logger.Fatal().Err(err).Msg("Failed to load .env file")
 	}
-	// End of the part to remove
 
 	if err := env.Parse(&Conf.DB); err != nil {
 		Logger.Fatal().Err(err).Msg("Failed to load env for DB")
@@ -56,7 +55,7 @@ func Init() {
 		Logger.Fatal().Err(err).Msg("Failed to load env for server")
 	}
 
-	// Set log level
+	// Set log level according to env value SERVER_LOG_LEVEL
 	switch Conf.Server.LogLevel {
 	case "trace":
 		zerolog.SetGlobalLevel(zerolog.TraceLevel)
@@ -73,7 +72,7 @@ func Init() {
 	case "panic":
 		zerolog.SetGlobalLevel(zerolog.PanicLevel)
 	default:
-		Logger.Fatal().Msg("sdsdsd")
+		Logger.Fatal().Msgf("Unsupported value '%s' for SERVER_LOG_LEVEL. Should be trace, debug, info, warn, error, fatal or panic", Conf.Server.LogLevel)
 	}
 
 	// Capture connection properties and connect to DB.
@@ -96,5 +95,4 @@ func Init() {
 	}
 
 	Logger.Info().Msg("Successfully ping DB")
-
 }

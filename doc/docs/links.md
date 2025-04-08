@@ -6,6 +6,8 @@
 * [Grouping routes with a router](https://dev.to/kengowada/go-routing-101-handling-and-grouping-routes-with-nethttp-4k0e)
 * [Organizing database access](https://www.alexedwards.net/blog/organising-database-access)
 * [API Pagination](https://www.merge.dev/blog/rest-api-pagination)
+* [Middleware simple example](https://gowebexamples.com/basic-middleware/)
+* [Middleware advanced explaination](https://vishnubharathi.codes/blog/exploring-middlewares-in-go/)
 
 ## Powens
 * [Powens Console](https://console.powens.com/)
