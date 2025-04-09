@@ -31,12 +31,17 @@ func ConnectionSynced(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		// If no transactions, return
+		if len(account.Transactions) == 0 {
+			return
+		}
+
 		// Bulk insert txs
-		query = "INSERT INTO tx (tx_id, bank_id, tx_date, tx_value, tx_type, original_wording) VALUES "
+		query = "INSERT INTO tx (tx_id, user_id, bank_id, tx_date, tx_value, tx_type, original_wording) VALUES "
 		vals := []any{}
 		for _, tx := range account.Transactions {
-			query += "(?, ?, ?, ?, ?, ?),"
-			vals = append(vals, tx.Id, tx.Bank_id, tx.Date, tx.Value, tx.Transaction_type, tx.Original_wording)
+			query += "(?, ?, ?, ?, ?, ?, ?),"
+			vals = append(vals, tx.Id, account.User_id, tx.Bank_id, tx.Date, tx.Value, tx.Transaction_type, tx.Original_wording)
 		}
 		query = query[0 : len(query)-1]
 

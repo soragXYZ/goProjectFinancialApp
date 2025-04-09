@@ -3,4 +3,3 @@
 - Write documentation and README
 - Form validation ?
 - godoc / swagger ?
-- check why someone requesting / and .git/config

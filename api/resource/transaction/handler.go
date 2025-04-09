@@ -39,7 +39,7 @@ func GetTransactions(w http.ResponseWriter, r *http.Request) {
 
 	for rows.Next() {
 		var tx Transaction
-		if err := rows.Scan(&tx.Id, &tx.Bank_id, &tx.Date, &tx.Value, &tx.Transaction_type, &tx.Original_wording); err != nil {
+		if err := rows.Scan(&tx.Id, &tx.User_id, &tx.Bank_id, &tx.Date, &tx.Value, &tx.Transaction_type, &tx.Original_wording); err != nil {
 			config.Logger.Error().Err(err).Msg("Cannot scan row")
 			http.Error(w, "", http.StatusInternalServerError)
 			return

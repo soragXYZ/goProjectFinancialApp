@@ -1,6 +1,7 @@
 DROP TABLE IF EXISTS tx;
 CREATE TABLE tx (
     tx_id INT NOT NULL,
+    user_id INT NOT NULL,
     bank_id INT NOT NULL,
     tx_date DATETIME NOT NULL,
     tx_value FLOAT NOT NULL,
