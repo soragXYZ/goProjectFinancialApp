@@ -18,19 +18,19 @@ func New() *http.ServeMux {
 
 	router := http.NewServeMux()
 
-	router.HandleFunc("GET /health/", middleware.Middleware(miscellaneous.HealthCheck))
-	router.HandleFunc("/", middleware.Middleware(miscellaneous.NotFound))
+	router.HandleFunc("GET /health/", middleware.Log(middleware.Whitelisted(miscellaneous.HealthCheck)))
+	router.HandleFunc("/", middleware.Log(middleware.Whitelisted(miscellaneous.NotFound)))
 
-	router.HandleFunc("POST /webhook/connection_synced/", middleware.Middleware(webhook.ConnectionSynced))
+	router.HandleFunc("POST /webhook/connection_synced/", middleware.Log(middleware.Whitelisted(webhook.ConnectionSynced)))
 
-	router.HandleFunc("GET /transaction/", middleware.Middleware(transaction.GetTransactions))
+	router.HandleFunc("GET /transaction/", middleware.Log(middleware.Whitelisted(transaction.GetTransactions)))
 
-	router.HandleFunc("POST /auth/permanentUserToken/", middleware.Middleware(auth.CreatePermanentUserToken))
-	router.HandleFunc("GET /auth/permanentUserToken/", middleware.Middleware(auth.GetPermanentUserToken))
-	router.HandleFunc("DELETE /auth/permanentUserToken/", middleware.Middleware(auth.DeletePermanentUserToken))
+	router.HandleFunc("POST /auth/permanentUserToken/", middleware.Log(middleware.Whitelisted(auth.CreatePermanentUserToken)))
+	router.HandleFunc("GET /auth/permanentUserToken/", middleware.Log(middleware.Whitelisted(auth.GetPermanentUserToken)))
+	router.HandleFunc("DELETE /auth/permanentUserToken/", middleware.Log(middleware.Whitelisted(auth.DeletePermanentUserToken)))
 
-	router.HandleFunc("POST /auth/temporaryUserToken/", middleware.Middleware(auth.CreateTemporaryUserToken))
-	router.HandleFunc("GET /auth/temporaryUserToken/", middleware.Middleware(auth.GetTemporaryUserToken))
+	router.HandleFunc("POST /auth/temporaryUserToken/", middleware.Log(middleware.Whitelisted(auth.CreateTemporaryUserToken)))
+	router.HandleFunc("GET /auth/temporaryUserToken/", middleware.Log(middleware.Whitelisted(auth.GetTemporaryUserToken)))
 
 	return router
 }
