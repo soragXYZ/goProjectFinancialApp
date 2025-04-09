@@ -2,4 +2,12 @@ https://webview.powens.com/connect
   ?domain={domain}
   &client_id={clientId} (dans pannel admin)
   &redirect_uri={yourCallbackUri}
+  &connector_capabilities=bank,bankwealth
   &code={temporaryCode}
+
+https://docs.powens.com/api-reference/overview/webview#add-connection-flow
+https://docs.powens.com/api-reference/overview/webview#re-auth--edit-connection-credentials-flow
+https://docs.powens.com/api-reference/overview/webview#manage-connections
+
+handle connexion error gracefully
+https://docs.powens.com/api-reference/overview/webview#implementation-guidelines

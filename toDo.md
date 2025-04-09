@@ -3,3 +3,6 @@
 - Write documentation and README
 - Form validation ?
 - godoc / swagger ?
+- Verify Bearer token sent from webhooks to authenticate (we only use IP for now)
+- Add wealth account
+- CLIENT_ID and CLIENT_SECRET not checked in config !

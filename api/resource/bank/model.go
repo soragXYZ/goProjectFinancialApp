@@ -48,8 +48,8 @@ type BankAccountWebhook struct {
 	Iban          string                    `json:"iban"`
 	Currency      miscellaneous.Currency    `json:"currency"`
 	Account_type  string                    `json:"type"`
-	Error         string                    `json:"error"`
+	Error         string                    `json:"error"` // not needed ?
 	Usage         string                    `json:"usage"`
-	Loan          Loan                      `json:"loan"`
+	Loan          Loan                      `json:"loan"` // not needed ?
 	Transactions  []transaction.Transaction `json:"transactions"`
 }

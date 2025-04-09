@@ -7,6 +7,7 @@ import (
 	"financialApp/api/resource/miscellaneous"
 	"financialApp/api/resource/transaction"
 	"financialApp/api/resource/webhook"
+	"financialApp/api/resource/webview"
 
 	"financialApp/api/router/middleware"
 )
@@ -31,6 +32,8 @@ func New() *http.ServeMux {
 
 	router.HandleFunc("POST /auth/temporaryUserToken/", middleware.Log(middleware.Whitelisted(auth.CreateTemporaryUserToken)))
 	router.HandleFunc("GET /auth/temporaryUserToken/", middleware.Log(middleware.Whitelisted(auth.GetTemporaryUserToken)))
+
+	router.HandleFunc("GET /webview/connectionLink/", middleware.Log(middleware.Whitelisted(webview.GetCreationLink)))
 
 	return router
 }
