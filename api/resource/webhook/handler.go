@@ -14,6 +14,7 @@ func ConnectionSynced(w http.ResponseWriter, r *http.Request) {
 
 	var conn Conn_synced
 
+	// Error here in decode sometimes, one wrong field in conn ?
 	err := json.NewDecoder(r.Body).Decode(&conn)
 	if err != nil {
 		config.Logger.Error().Err(err).Msg("Cannot decode r.Body")
@@ -34,9 +35,9 @@ func ConnectionSynced(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// If no transactions, return
+		// If no transactions, process the next account
 		if len(account.Transactions) == 0 {
-			return
+			continue
 		}
 
 		// Bulk insert txs

@@ -5,4 +5,4 @@
 - godoc / swagger ?
 - Verify Bearer token sent from webhooks to authenticate (we only use IP for now)
 - Add wealth account
-- CLIENT_ID and CLIENT_SECRET not checked in config !
+- Use manage link only instead of create; better for the UX

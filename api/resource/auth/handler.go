@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"net/http"
-	"os"
 
 	"financialApp/config"
 )
@@ -28,12 +27,12 @@ func CreatePermanentUserToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	initToken := AuthTokenInitRequest{
-		Client_id:     os.Getenv("CLIENT_ID"),
-		Client_secret: os.Getenv("CLIENT_SECRET"),
+		Client_id:     config.Conf.Powens.ClientId,
+		Client_secret: config.Conf.Powens.ClientSecret,
 	}
 
 	// Get a permanent user token from Powens API and store it in DB
-	const url string = "https://testfinary-sandbox.biapi.pro/2.0/auth/init"
+	var url string = config.Conf.Powens.ApiUrl + "auth/init"
 	jsonBody, err := json.Marshal(initToken)
 	if err != nil {
 		config.Logger.Error().Err(err).Msg("Cannot marshal initToken")
@@ -103,7 +102,7 @@ func CreateTemporaryUserToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get a temporary user token from Powens API and store it in DB
-	const url string = "https://testfinary-sandbox.biapi.pro/2.0/auth/token/code"
+	var url string = config.Conf.Powens.ApiUrl + "auth/token/code"
 	var bearer string = "Bearer " + permanentUserToken
 
 	req, err := http.NewRequest("GET", url, nil)

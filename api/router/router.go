@@ -33,7 +33,8 @@ func New() *http.ServeMux {
 	router.HandleFunc("POST /auth/temporaryUserToken/", middleware.Log(middleware.Whitelisted(auth.CreateTemporaryUserToken)))
 	router.HandleFunc("GET /auth/temporaryUserToken/", middleware.Log(middleware.Whitelisted(auth.GetTemporaryUserToken)))
 
-	router.HandleFunc("GET /webview/connectionLink/", middleware.Log(middleware.Whitelisted(webview.GetCreationLink)))
+	router.HandleFunc("GET /webview/createConnectionLink/", middleware.Log(middleware.Whitelisted(webview.GetCreationLink)))
+	router.HandleFunc("GET /webview/manageConnectionLink/", middleware.Log(middleware.Whitelisted(webview.GetManageLink)))
 
 	return router
 }

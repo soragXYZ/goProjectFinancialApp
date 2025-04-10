@@ -9,17 +9,6 @@ import (
 	"financialApp/config"
 )
 
-type remoteIPType string
-
-const REMOTE_IP remoteIPType = "remoteIP"
-
-var WHITELISTED_IPS = []string{
-	"::1",           // localhost
-	"13.39.29.243",  // Powens
-	"15.188.68.198", // Powens
-	"13.39.95.239",  // Powens
-}
-
 // See https://vishnubharathi.codes/blog/exploring-middlewares-in-go/
 // https://gowebexamples.com/basic-middleware/
 func Log(f http.HandlerFunc) http.HandlerFunc {
@@ -53,7 +42,7 @@ func Whitelisted(f http.HandlerFunc) http.HandlerFunc {
 
 		remoteIp := ipFromHostPort(r.RemoteAddr)
 
-		if !slices.Contains(WHITELISTED_IPS, remoteIp) {
+		if !slices.Contains(config.Conf.Powens.WhitelistedIPs, remoteIp) {
 			config.Logger.Warn().Msg("Unauthorized IP")
 			http.Error(w, "", http.StatusUnauthorized)
 			return

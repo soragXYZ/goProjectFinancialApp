@@ -35,9 +35,25 @@ type ConfDB struct {
 	Password string `env:"DB_PASS,required"`
 }
 
+type ConfPowens struct {
+	ClientId       string   `env:"POWENS_CLIENT_ID,required"`
+	ClientSecret   string   `env:"POWENS_CLIENT_SECRET,required"`
+	Domain         string   `env:"POWENS_DOMAIN,required"`
+	ApiUrl         string   `env:"POWENS_API_URL,required"`
+	WebviewUrl     string   `env:"POWENS_WEBVIEW_URL,required"`
+	RedirectUrl    string   `env:"POWENS_REDIRECT_URL,required"`
+	WhitelistedIPs []string `env:"POWENS_WHITELISTED_IPS,required"`
+}
+
+type ConfOther struct {
+	Language string `env:"OTHER_LANGUAGE,required"`
+}
+
 type ConfStruct struct {
 	Server ConfServer
 	DB     ConfDB
+	Powens ConfPowens
+	Other  ConfOther
 }
 
 func Init() {
@@ -53,6 +69,12 @@ func Init() {
 	}
 	if err := env.Parse(&Conf.Server); err != nil {
 		Logger.Fatal().Err(err).Msg("Failed to load env for server")
+	}
+	if err := env.Parse(&Conf.Powens); err != nil {
+		Logger.Fatal().Err(err).Msg("Failed to load env for Powens")
+	}
+	if err := env.Parse(&Conf.Other); err != nil {
+		Logger.Fatal().Err(err).Msg("Failed to load env for Other")
 	}
 
 	// Set log level according to env value SERVER_LOG_LEVEL
