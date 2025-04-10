@@ -1,6 +1,7 @@
 package bank
 
 import (
+	"financialApp/api/resource/invest"
 	"financialApp/api/resource/miscellaneous"
 	"financialApp/api/resource/transaction"
 	"time"
@@ -51,5 +52,6 @@ type BankAccountWebhook struct {
 	Error         string                    `json:"error"` // not needed ?
 	Usage         string                    `json:"usage"`
 	Loan          Loan                      `json:"loan"` // not needed ?
+	Investments   []invest.Invest           `json:"investments"`
 	Transactions  []transaction.Transaction `json:"transactions"`
 }
