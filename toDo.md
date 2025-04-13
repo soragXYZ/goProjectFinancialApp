@@ -1,4 +1,4 @@
-- Replace expires_in by datetime auto ??
+- DB datetime datetime auto / TIMESTAMP ? DEFAULT CURRENT_TIMESTAMP ???
 - Write unit tests
 - Write documentation and README
 - Form validation ?
@@ -8,3 +8,6 @@
 - Add trace in webhook/connection_synced to see incoming data
 - See what s happening when an invest is deleted ? For example, swap from 1 ETF to another
 - Add loan endpoint and DB
+- Subrouting for endpoints ?
+    https://codewithflash.com/advanced-routing-with-go-122
+    https://dev.to/kengowada/go-routing-101-handling-and-grouping-routes-with-nethttp-4k0e
