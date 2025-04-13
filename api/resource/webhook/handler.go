@@ -18,7 +18,6 @@ func ConnectionSynced(w http.ResponseWriter, r *http.Request) {
 
 	var conn Conn_synced
 
-	// Error here in decode sometimes, one wrong field in conn ?
 	err := json.NewDecoder(r.Body).Decode(&conn)
 	if err != nil {
 		config.Logger.Error().Err(err).Msg("Cannot decode r.Body")
@@ -44,6 +43,27 @@ func ConnectionSynced(w http.ResponseWriter, r *http.Request) {
 			config.Logger.Error().Err(err).Msg(query)
 			http.Error(w, "", http.StatusInternalServerError)
 			return
+		}
+
+		// Proceed with loan
+		if account.Loan.Total_amount != 0 {
+			config.Logger.Trace().
+				Str("last_payment_date", account.Loan.Last_payment_date).
+				Uint("nb_payments_done", account.Loan.Nb_payments_done).
+				Uint("nb_payments_left", account.Loan.Nb_payments_left).
+				Str("next_payment_date", account.Loan.Next_payment_date).
+				Float32("total_loan_amount", account.Loan.Total_amount).
+				Str("loan_type", account.Loan.Loan_type).
+				Msg("Loan update")
+
+			// Update the loan table
+			query = "INSERT INTO loan (loan_account_id, total_amount, available_amount, used_amount, subscription_date, maturity_date, start_repayment_date, is_deferred, next_payment_amount, next_payment_date, rate, nb_payments_left, nb_payments_done, nb_payments_total, last_payment_amount, last_payment_date, account_label, insurance_label, insurance_amount, insurance_rate, duration, loan_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE nb_payments_left=?"
+			_, err = config.DB.Exec(query, account.Account_id, account.Loan.Total_amount, account.Loan.Available_amount, account.Loan.Used_amount, account.Loan.Subscription_date, account.Loan.Maturity_date, account.Loan.Start_repayment_date, account.Loan.Deferred, account.Loan.Next_payment_amount, account.Loan.Next_payment_date, account.Loan.Rate, account.Loan.Nb_payments_left, account.Loan.Nb_payments_done, account.Loan.Nb_payments_total, account.Loan.Last_payment_amount, account.Loan.Last_payment_date, account.Loan.Account_label, account.Loan.Insurance_label, account.Loan.Insurance_amount, account.Loan.Insurance_rate, account.Loan.Duration, account.Loan.Loan_type, account.Loan.Nb_payments_left)
+			if err != nil {
+				config.Logger.Error().Err(err).Msg(query)
+				http.Error(w, "", http.StatusInternalServerError)
+				return
+			}
 		}
 
 		// Proceed with transactions
