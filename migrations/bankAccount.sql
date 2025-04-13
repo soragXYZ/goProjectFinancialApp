@@ -1,6 +1,6 @@
 DROP TABLE IF EXISTS bankAccount, tx;
 CREATE TABLE bankAccount (
-    bank_id INT NOT NULL,
+    account_id INT NOT NULL,
     user_id INT NOT NULL,
     bank_number VARCHAR(255) NOT NULL,
     original_name VARCHAR(255) NOT NULL,
@@ -11,5 +11,5 @@ CREATE TABLE bankAccount (
     account_type VARCHAR(255) NOT NULL,
     usage_type VARCHAR(255) NOT NULL,
 
-    PRIMARY KEY (`bank_id`)
+    PRIMARY KEY (`account_id`)
 );

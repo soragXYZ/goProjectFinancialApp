@@ -40,7 +40,7 @@ type Loan struct {
 
 // https://docs.powens.com/api-reference/products/data-aggregation/bank-accounts#bankaccount-object
 type BankAccountWebhook struct {
-	Bank_id       int                       `json:"id"`
+	Account_id    int                       `json:"id"`
 	User_id       int                       `json:"id_user"`
 	Number        string                    `json:"number"`
 	Original_name string                    `json:"original_name"`
