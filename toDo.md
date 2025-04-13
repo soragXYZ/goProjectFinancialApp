@@ -5,7 +5,6 @@
 - godoc / swagger ?
 - Verify Bearer token sent from webhooks to authenticate (we only use IP for now)
 - Add wealth account
-- Use manage link only instead of create; better for the UX
 - Add trace in webhook/connection_synced to see incoming data
 - See what s happening when an invest is deleted ? For example, swap from 1 ETF to another
 - Add loan endpoint and DB

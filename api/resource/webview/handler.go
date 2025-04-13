@@ -2,57 +2,17 @@ package webview
 
 import (
 	"database/sql"
+	"encoding/json"
 	"net/http"
 
-	"financialApp/api/resource/auth"
 	"financialApp/config"
 )
 
-func GetCreationLink(w http.ResponseWriter, r *http.Request) {
-
-	var authCode auth.AuthCode
-
-	var query string = "SELECT * FROM authCode LIMIT 1"
-	row := config.DB.QueryRow(query)
-	if err := row.Scan(&authCode.Auth_Code, &authCode.Expires_in); err != nil {
-
-		if err == sql.ErrNoRows {
-			http.Error(w, "Token does not exist", http.StatusNotFound)
-			return
-		}
-
-		config.Logger.Error().Err(err).Msg(query)
-		http.Error(w, "", http.StatusInternalServerError)
-		return
-	}
-
-	// The URL is builded as indicated here
-	// https://docs.powens.com/api-reference/overview/webview#add-connection-flow
-	var powensURL string = config.Conf.Powens.WebviewUrl + config.Conf.Other.Language + "/connect"
-	var domain string = "domain=" + config.Conf.Powens.Domain
-	var client_id string = "client_id=" + config.Conf.Powens.ClientId
-	var redirect_uri string = "redirect_uri=" + config.Conf.Powens.RedirectUrl
-	var connector_capabilities string = "connector_capabilities=bank,bankwealth"
-
-	var connexionUrl string = powensURL + "?" + domain + "&" + client_id + "&" + redirect_uri + "&" + connector_capabilities + "&code=" + authCode.Auth_Code
-
-	w.Write([]byte(connexionUrl))
-}
-
 func GetManageLink(w http.ResponseWriter, r *http.Request) {
 
-	var authCode auth.AuthCode
-
-	var query string = "SELECT * FROM authCode LIMIT 1"
-	row := config.DB.QueryRow(query)
-	if err := row.Scan(&authCode.Auth_Code, &authCode.Expires_in); err != nil {
-
-		if err == sql.ErrNoRows {
-			http.Error(w, "Token does not exist", http.StatusNotFound)
-			return
-		}
-
-		config.Logger.Error().Err(err).Msg(query)
+	var code authCode = getTemporaryToken()
+	if code.Error != nil || len(code.ErrorString) > 0 {
+		config.Logger.Error().Err(code.Error).Msg(code.ErrorString)
 		http.Error(w, "", http.StatusInternalServerError)
 		return
 	}
@@ -65,7 +25,57 @@ func GetManageLink(w http.ResponseWriter, r *http.Request) {
 	var redirect_uri string = "redirect_uri=" + config.Conf.Powens.RedirectUrl
 	var connector_capabilities string = "connector_capabilities=bank,bankwealth"
 
-	var connexionUrl string = powensURL + "?" + domain + "&" + client_id + "&" + redirect_uri + "&" + connector_capabilities + "&code=" + authCode.Auth_Code
+	var connexionUrl string = powensURL + "?" + domain + "&" + client_id + "&" + redirect_uri + "&" + connector_capabilities + "&code=" + code.Auth_Code
 
 	w.Write([]byte(connexionUrl))
+}
+
+func getTemporaryToken() authCode {
+
+	// Check if one permanent user token already exists in DB or not, as it s needed to create a temporary token
+	var permanentUserToken string
+	var query string = "SELECT auth_token FROM authToken LIMIT 1"
+	row := config.DB.QueryRow(query)
+	if err := row.Scan(&permanentUserToken); err != nil {
+
+		if err == sql.ErrNoRows {
+			return authCode{Auth_Code: "", Error: nil, ErrorString: "Permanent user token does not exist"}
+		}
+
+		return authCode{Auth_Code: "", Error: err, ErrorString: query}
+	}
+
+	config.Logger.Trace().Str("permanent_user_code", permanentUserToken).Msg("")
+
+	// Get a temporary user token from Powens API
+	var url string = config.Conf.Powens.ApiUrl + "auth/token/code"
+	var bearer string = "Bearer " + permanentUserToken
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return authCode{Auth_Code: "", Error: err, ErrorString: "Cannot create new get request"}
+	}
+	req.Header.Add("Authorization", bearer)
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return authCode{Auth_Code: "", Error: err, ErrorString: "Cannot execute request"}
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		var errorString string = "Powens did not answer correctly: " + string(resp.Status)
+		return authCode{Auth_Code: "", Error: nil, ErrorString: errorString}
+	}
+
+	var code authCode
+
+	err = json.NewDecoder(resp.Body).Decode(&code)
+	if err != nil {
+		return authCode{Auth_Code: "", Error: err, ErrorString: "Cannot decode resp.Body"}
+	}
+
+	config.Logger.Trace().Str("temporary_code", code.Auth_Code).Msg("")
+	return code
 }

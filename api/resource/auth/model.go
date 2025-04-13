@@ -13,9 +13,3 @@ type AuthToken struct {
 	Auth_token string `json:"auth_token"`
 	Id_user    int    `json:"id_user"`
 }
-
-// https://docs.powens.com/api-reference/overview/authentication#authcode-object
-type AuthCode struct {
-	Auth_Code  string `json:"code"`
-	Expires_in int    `json:"expires_in"`
-}
