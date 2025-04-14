@@ -10,16 +10,21 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      - name: Example step
+        env: 
+          DATABASE_URL: MyURL
+        run: | 
+          echo This is the database URL: $DATABASE_URL
       - shell: bash
         env:
           TEST_ENV: ${{ env.TEST_ENV }}
         run: |
-          echo "$TEST_ENV"
+          echo $TEST_ENV
       - shell: bash
         env:
           TEST_SECRET: ${{ secrets.TEST_SECRET }}
         run: |
-          echo "$TEST_SECRET"
+          echo $TEST_SECRET
       - uses: actions/checkout@v4
       - name: Configure Git Credentials
         run: |
