@@ -39,10 +39,10 @@ plugins:
   - git-revision-date-localized:
       enable_creation_date: true
       fallback_to_build_date: true
-  # - git-authors
   - git-committers:
       repository: soragXYZ/goProjectFinancialApp
       branch: main
+      docs_path: docs/docs/
 
 extra:
   generator: false
