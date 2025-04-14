@@ -39,10 +39,10 @@ plugins:
   - git-revision-date-localized:
       enable_creation_date: true
       fallback_to_build_date: true
-  - git-authors
-  # - git-committers:
-  #     repository: squidfunk/mkdocs-material
-  #     branch: main
+  # - git-authors
+  - git-committers:
+      repository: soragXYZ/goProjectFinancialApp
+      branch: main
 
 extra:
   generator: false
