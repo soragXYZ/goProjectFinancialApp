@@ -1,24 +1,48 @@
-site_name: My Docs
-site_url: https://mydomain.org/mysite
+site_name: Financial app # To be changed
+site_url: https://soragxyz.github.io/goProjectFinancialApp/
 
 repo_url: https://github.com/soragXYZ/goProjectFinancialApp
 repo_name: Go to repo
-edit_uri: edit/main/doc/docs/
+edit_uri: edit/main/docs/docs/
 
 
 theme:
   name: material
+  language: en
+  favicon: assets/cash-back.png
+  icon:
+    logo: material/account-cash
+    alternate: material/earth
   custom_dir: overrides
   features:
     - content.code.copy
     - navigation.instant
     - navigation.instant.progress
     - navigation.tracking
+    - navigation.top
+    - navigation.footer
     - navigation.tabs
     - navigation.tabs.sticky
     - navigation.path
     - content.action.edit
     - content.action.view
+    - search.highlight
+  
+  # System color
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      primary: teal
+      scheme: default 
+      toggle:
+        icon: octicons/sun-16
+        name: Switch to dark mode
+
+    - media: "(prefers-color-scheme: dark)"
+      primary: teal
+      scheme: slate
+      toggle:
+        icon: octicons/moon-16
+        name: Switch to system preference
 
 
 
@@ -26,6 +50,10 @@ theme:
 # Mkdocs Markdown Extentions, Plugins & extras
 #===================================================================================#
 markdown_extensions:
+  - tables
+  - toc:
+      permalink: ⚓︎
+      permalink_title: Anchor link to this section for reference
   - pymdownx.highlight:
       anchor_linenums: true
       line_spans: __span
@@ -33,13 +61,26 @@ markdown_extensions:
   - pymdownx.inlinehilite
   - pymdownx.snippets
   - pymdownx.superfences
+  - admonition
+  - pymdownx.details
 
 plugins:
+  - i18n:
+      docs_structure: folder
+      languages:
+        - locale: en
+          default: true
+          name: English
+          build: true
+        - locale: fr
+          name: Français
+          build: true
   - search
   - git-revision-date-localized:
       enable_creation_date: true
       fallback_to_build_date: true
   - git-committers:
+      enabled: true
       repository: soragXYZ/goProjectFinancialApp
       branch: main
       docs_path: docs/docs/
@@ -54,15 +95,10 @@ nav:
   - Home:
     - Home: "index.md"
     - Welcome: "home/welcome.md"
-    - First steps: "home/hello.md"
     - Sub 1:
       - Ok 1: "home/sub1/ok1.md"
       - Ok 2: "home/sub1/ok2.md"
       - Ok 3: "home/sub1/ok3.md"
-    - Sub 2:
-      - Ok 1: "home/sub2/ok1.md"
-      - Ok 2: "home/sub2/ok2.md"
-      - Ok 3: "home/sub2/ok3.md"
   
   - Other:
     - Link: "other/links.md"
