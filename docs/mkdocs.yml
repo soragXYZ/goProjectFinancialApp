@@ -40,7 +40,6 @@ plugins:
       enable_creation_date: true
       fallback_to_build_date: true
   - git-committers:
-      enabled: true
       repository: soragXYZ/goProjectFinancialApp
       branch: main
       docs_path: docs/docs/

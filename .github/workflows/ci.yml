@@ -10,6 +10,11 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      - shell: bash
+        env:
+          TEST_SECRET: ${{ secrets.TEST_SECRET }}
+        run: |
+          echo "$TEST_SECRET"
       - uses: actions/checkout@v4
       - name: Configure Git Credentials
         run: |
@@ -28,6 +33,6 @@ jobs:
       - run: pip install mkdocs-material
       - run: pip install mkdocs-git-revision-date-localized-plugin
       - run: pip install mkdocs-git-committers-plugin
-      - run: mkdocs gh-deploy --force -f docs/mkdocs.yml
-        env:
+      - env:
           MKDOCS_GIT_COMMITTERS_APIKEY: ${{ secrets.MKDOCS_GIT_COMMITTERS_APIKEY }}
+        run: mkdocs gh-deploy --force -f docs/mkdocs.yml
