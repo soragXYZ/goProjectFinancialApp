@@ -43,6 +43,7 @@ plugins:
       repository: soragXYZ/goProjectFinancialApp
       branch: main
       docs_path: docs/docs/
+      token: !ENV ["MKDOCS_GIT_COMMITTERS_APIKEY"]
 
 extra:
   generator: false
