@@ -1,10 +1,30 @@
 site_name: My Docs
 site_url: https://mydomain.org/mysite
+
+repo_url: https://github.com/soragXYZ/goProjectFinancialApp
+repo_name: Go to repo
+edit_uri: edit/main/doc/docs/
+
+
 theme:
   name: material
+  custom_dir: overrides
   features:
     - content.code.copy
+    - navigation.instant
+    - navigation.instant.progress
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.path
+    - content.action.edit
+    - content.action.view
 
+
+
+#===================================================================================#
+# Mkdocs Markdown Extentions, Plugins & extras
+#===================================================================================#
 markdown_extensions:
   - pymdownx.highlight:
       anchor_linenums: true
@@ -13,3 +33,38 @@ markdown_extensions:
   - pymdownx.inlinehilite
   - pymdownx.snippets
   - pymdownx.superfences
+
+plugins:
+  - search
+  - git-revision-date-localized:
+      enable_creation_date: true
+      fallback_to_build_date: true
+  - git-authors
+  # - git-committers:
+  #     repository: squidfunk/mkdocs-material
+  #     branch: main
+
+extra:
+  generator: false
+
+#===================================================================================#
+# Mkdocs Navigation Tree
+#===================================================================================#
+nav:
+  - Home:
+    - Home: "index.md"
+    - Welcome: "home/welcome.md"
+    - First steps: "home/hello.md"
+    - Sub 1:
+      - Ok 1: "home/sub1/ok1.md"
+      - Ok 2: "home/sub1/ok2.md"
+      - Ok 3: "home/sub1/ok3.md"
+    - Sub 2:
+      - Ok 1: "home/sub2/ok1.md"
+      - Ok 2: "home/sub2/ok2.md"
+      - Ok 3: "home/sub2/ok3.md"
+  
+  - Other:
+    - Link: "other/links.md"
+    - Setup: "other/setup.md"
+    - Dependencies: "other/dependencies.md"
