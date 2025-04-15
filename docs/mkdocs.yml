@@ -1,15 +1,18 @@
-site_name: Financial app # To be changed
-site_url: https://soragxyz.github.io/goProjectFinancialApp/
+site_name: Freenahi
+site_url: https://soragxyz.github.io/freenahi/
 
-repo_url: https://github.com/soragXYZ/goProjectFinancialApp
-repo_name: Go to repo
+repo_url: https://github.com/soragXYZ/freenahi
+repo_name: soragXYZ/freenahi
 edit_uri: edit/main/docs/docs/
 
 
+#===================================================================================#
+# Theme
+#===================================================================================#
 theme:
   name: material
   language: en
-  favicon: assets/cash-back.png
+  favicon: assets/images/safe.png
   icon:
     logo: material/account-cash
     alternate: material/earth
@@ -31,14 +34,14 @@ theme:
   # System color
   palette:
     - media: "(prefers-color-scheme: light)"
-      primary: teal
+      primary: deep-purple
       scheme: default 
       toggle:
         icon: octicons/sun-16
         name: Switch to dark mode
 
     - media: "(prefers-color-scheme: dark)"
-      primary: teal
+      primary: deep-purple
       scheme: slate
       toggle:
         icon: octicons/moon-16
@@ -51,6 +54,11 @@ theme:
 #===================================================================================#
 markdown_extensions:
   - tables
+  - md_in_html
+  - attr_list
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - toc:
       permalink: ⚓︎
       permalink_title: Anchor link to this section for reference
@@ -75,6 +83,12 @@ plugins:
         - locale: fr
           name: Français
           build: true
+          nav_translations:
+            Home: Accueil
+            What is Freenahi?: Qu'est ce que Freenahi?
+            Get started: Démarrer
+            Contribute: Contribuer
+
   - search
   - git-revision-date-localized:
       enable_creation_date: true
@@ -92,15 +106,21 @@ extra:
 # Mkdocs Navigation Tree
 #===================================================================================#
 nav:
-  - Home:
-    - Home: "index.md"
-    - Welcome: "home/welcome.md"
-    - Sub 1:
-      - Ok 1: "home/sub1/ok1.md"
-      - Ok 2: "home/sub1/ok2.md"
-      - Ok 3: "home/sub1/ok3.md"
-  
-  - Other:
-    - Link: "other/links.md"
-    - Setup: "other/setup.md"
-    - Dependencies: "other/dependencies.md"
+  - Home: "index.md"
+  - What is Freenahi?:
+    - WIP: whatIs/WIP.md
+
+  - Get started:
+    - WIP: getStarted/WIP.md
+
+  - Backend:
+    - Setup: "backend/setup.md"
+    - Link: "backend/links.md"  
+    - Dependencies: "backend/dependencies.md"
+
+  - Frontend:
+    - WIP: frontend/WIP.md
+
+  - Documentation: documentation/documentation.md
+
+  - Contribute: other/contribute.md

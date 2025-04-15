@@ -1,3 +1,4 @@
-# Welcome to MkDocs
-
-HELLO
+---
+template: home-en.html
+title: Home
+---

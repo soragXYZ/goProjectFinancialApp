@@ -1,4 +1,4 @@
-# Welcome to MkDocs
-
-COUCOU
-
+---
+template: home-fr.html
+title: Home
+---

@@ -1,1 +1,1 @@
-Please consult the documentation website [here](https://soragxyz.github.io/goProjectFinancialApp/)
+Please consult the documentation website [here](https://soragxyz.github.io/freenahi/)

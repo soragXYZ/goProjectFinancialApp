@@ -1,6 +1,6 @@
 # Dependencies
 
-JE SUIS UN TEST
+I AM A TEST
 
 ### OK 1
 * [godotenv, a project which loads env vars from a .env file](https://github.com/joho/godotenv)
