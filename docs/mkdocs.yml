@@ -56,6 +56,9 @@ markdown_extensions:
   - tables
   - md_in_html
   - attr_list
+  - def_list
+  - pymdownx.tasklist:
+      custom_checkbox: true
   - pymdownx.emoji:
       emoji_index: !!python/name:material.extensions.emoji.twemoji
       emoji_generator: !!python/name:material.extensions.emoji.to_svg
@@ -71,6 +74,11 @@ markdown_extensions:
   - pymdownx.superfences
   - admonition
   - pymdownx.details
+  - pymdownx.tabbed:
+      alternate_style: true
+      slugify: !!python/object/apply:pymdownx.slugs.slugify
+        kwds:
+          case: lower
 
 plugins:
   - i18n:
@@ -108,10 +116,11 @@ extra:
 nav:
   - Home: "index.md"
   - What is Freenahi?:
-    - WIP: whatIs/WIP.md
+    - What is Freenahi: whatIs/freenahi.md
+    - What is Powens: whatIs/powens.md
 
   - Get started:
-    - WIP: getStarted/WIP.md
+    - Powens: getStarted/powens.md
 
   - Backend:
     - Setup: "backend/setup.md"
