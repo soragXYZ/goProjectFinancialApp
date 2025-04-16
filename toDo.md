@@ -9,5 +9,4 @@
     https://codewithflash.com/advanced-routing-with-go-122
     https://dev.to/kengowada/go-routing-101-handling-and-grouping-routes-with-nethttp-4k0e
 - Create a price history DB to get historical data for invest
-- Create bank account endpoint
-- Create loan endpoint
+- Start the frontend when price history DB is good
