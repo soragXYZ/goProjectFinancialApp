@@ -39,7 +39,6 @@ type ConfPowens struct {
 	ClientId       string   `env:"POWENS_CLIENT_ID,required"`
 	ClientSecret   string   `env:"POWENS_CLIENT_SECRET,required"`
 	Domain         string   `env:"POWENS_DOMAIN,required"`
-	ApiUrl         string   `env:"POWENS_API_URL,required"`
 	WebviewUrl     string   `env:"POWENS_WEBVIEW_URL,required"`
 	RedirectUrl    string   `env:"POWENS_REDIRECT_URL,required"`
 	WhitelistedIPs []string `env:"POWENS_WHITELISTED_IPS,required"`

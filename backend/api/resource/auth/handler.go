@@ -32,7 +32,7 @@ func CreatePermanentUserToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get a permanent user token from Powens API and store it in DB
-	var url string = config.Conf.Powens.ApiUrl + "auth/init"
+	var url string = "https://" + config.Conf.Powens.Domain + "-sandbox.biapi.pro/2.0/auth/init"
 	jsonBody, err := json.Marshal(initToken)
 	if err != nil {
 		config.Logger.Error().Err(err).Msg("Cannot marshal initToken")

@@ -20,7 +20,7 @@ func GetManageLink(w http.ResponseWriter, r *http.Request) {
 	// The URL is builded as indicated here
 	// https://docs.powens.com/api-reference/overview/webview#manage-connections
 	var powensURL string = config.Conf.Powens.WebviewUrl + config.Conf.Other.Language + "/manage"
-	var domain string = "domain=" + config.Conf.Powens.Domain
+	var domain string = "domain=" + config.Conf.Powens.Domain + "-sandbox"
 	var client_id string = "client_id=" + config.Conf.Powens.ClientId
 	var redirect_uri string = "redirect_uri=" + config.Conf.Powens.RedirectUrl
 	var connector_capabilities string = "connector_capabilities=bank,bankwealth"
@@ -48,7 +48,7 @@ func getTemporaryToken() authCode {
 	config.Logger.Trace().Str("permanent_user_code", permanentUserToken).Msg("")
 
 	// Get a temporary user token from Powens API
-	var url string = config.Conf.Powens.ApiUrl + "auth/token/code"
+	var url string = "https://" + config.Conf.Powens.Domain + "-sandbox.biapi.pro/2.0/auth/token/code"
 	var bearer string = "Bearer " + permanentUserToken
 
 	req, err := http.NewRequest("GET", url, nil)
