@@ -100,9 +100,11 @@ func ConnectionSynced(w http.ResponseWriter, r *http.Request) {
 		// Proceed with invests
 		if len(account.Investments) != 0 {
 
-			// Bulk insert invests
-			query = "INSERT INTO invest (invest_id, account_id, type_id, invest_label, invest_code, invest_code_type, stock_symbol, quantity, unit_price, unit_value, valuation, diff, diff_percent, last_update) VALUES "
+			// Bulk insert invests and historyInvest
+			query = "INSERT INTO invest (invest_id, account_id, invest_label, invest_code, invest_code_type, stock_symbol, quantity, unit_price, unit_value, valuation, diff, diff_percent, last_update) VALUES "
+			queryBis := "INSERT INTO historyInvest (invest_id, valuation, date_valuation) VALUES "
 			vals := []any{}
+			valsBis := []any{}
 			for _, invest := range account.Investments {
 
 				config.Logger.Trace().
@@ -113,22 +115,32 @@ func ConnectionSynced(w http.ResponseWriter, r *http.Request) {
 					Float32("unit_price", invest.Unit_price).
 					Float32("unit_value", invest.Unit_value).
 					Float32("valuation", invest.Valuation).
-					Msg("Invest update")
+					Msg("Investment update")
 
-				query += "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?),"
-				vals = append(vals, invest.Invest_id, invest.Account_id, invest.Type_id, invest.Label, invest.Code, invest.Code_type, invest.Stock_symbol, invest.Quantity, invest.Unit_price, invest.Unit_value, invest.Valuation, invest.Diff, invest.Diff_percent, invest.Last_update)
+				query += "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?),"
+				queryBis += "(?, ?, ?),"
+				vals = append(vals, invest.Invest_id, invest.Account_id, invest.Label, invest.Code, invest.Code_type, invest.Stock_symbol, invest.Quantity, invest.Unit_price, invest.Unit_value, invest.Valuation, invest.Diff, invest.Diff_percent, invest.Last_update)
+				valsBis = append(valsBis, invest.Invest_id, invest.Valuation, invest.Last_update)
 			}
 
 			// remove last comma
 			query = query[0 : len(query)-1]
+			queryBis = queryBis[0 : len(queryBis)-1]
 
 			// if duplicate entry, update the field by the new value
-			query = query + "AS new(a, b, c, d, e, f, g, Nquantity, Nunit_price, Nunit_value, Nvaluation, Ndiff, Ndiff_percent, Nlast_update)"
-			query = query + "ON DUPLICATE KEY UPDATE quantity=Nquantity, unit_price=Nunit_price, unit_value=Nunit_value, valuation=Nvaluation, diff=Ndiff, diff_percent=Ndiff_percent, last_update=Nlast_update"
+			query += "AS new(a, b, c, d, e, f, Nquantity, Nunit_price, Nunit_value, Nvaluation, Ndiff, Ndiff_percent, Nlast_update)"
+			query += "ON DUPLICATE KEY UPDATE quantity=Nquantity, unit_price=Nunit_price, unit_value=Nunit_value, valuation=Nvaluation, diff=Ndiff, diff_percent=Ndiff_percent, last_update=Nlast_update"
 
 			_, err := config.DB.Exec(query, vals...)
 			if err != nil {
 				config.Logger.Error().Err(err).Msg(query)
+				http.Error(w, "", http.StatusInternalServerError)
+				return
+			}
+
+			_, err = config.DB.Exec(queryBis, valsBis...)
+			if err != nil {
+				config.Logger.Error().Err(err).Msg(queryBis)
 				http.Error(w, "", http.StatusInternalServerError)
 				return
 			}

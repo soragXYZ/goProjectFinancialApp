@@ -5,6 +5,7 @@ import (
 
 	"financialApp/api/resource/auth"
 	"financialApp/api/resource/bank"
+	"financialApp/api/resource/investment"
 	"financialApp/api/resource/loan"
 	"financialApp/api/resource/miscellaneous"
 	"financialApp/api/resource/transaction"
@@ -27,6 +28,9 @@ func New() *http.ServeMux {
 	router.HandleFunc("POST /webhook/connection_synced/", middleware.Log(middleware.Whitelisted(webhook.ConnectionSynced)))
 
 	router.HandleFunc("GET /bank_account/", middleware.Log(middleware.Whitelisted(bank.GetAccounts)))
+
+	router.HandleFunc("GET /investment/", middleware.Log(middleware.Whitelisted(investment.GetInvestments)))
+	router.HandleFunc("GET /investment/history/", middleware.Log(middleware.Whitelisted(investment.GetInvestmentsHistory)))
 
 	router.HandleFunc("GET /loan/", middleware.Log(middleware.Whitelisted(loan.GetLoans)))
 

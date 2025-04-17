@@ -2,7 +2,6 @@ DROP TABLE IF EXISTS invest;
 CREATE TABLE invest (
     invest_id INT NOT NULL,
     account_id INT NOT NULL,
-    type_id INT NOT NULL,
     invest_label VARCHAR(255) NOT NULL,
     invest_code VARCHAR(255) NOT NULL,
     invest_code_type VARCHAR(255) NOT NULL,
