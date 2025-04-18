@@ -5,8 +5,11 @@ import (
 	"log"
 	"net/url"
 
+	"freenahiFront/helper"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
+	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/driver/desktop"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
@@ -65,6 +68,21 @@ func makeMenu(fyneApp fyne.App, w fyne.Window) *fyne.MainMenu {
 	return main
 }
 
+func makeNav() fyne.CanvasObject {
+	app := fyne.CurrentApp()
+
+	themes := container.NewGridWithColumns(2,
+		widget.NewButton("Dark", func() {
+			app.Settings().SetTheme(&helper.ForcedVariant{Theme: theme.DefaultTheme(), Variant: theme.VariantDark})
+		}),
+		widget.NewButton("Light", func() {
+			app.Settings().SetTheme(&helper.ForcedVariant{Theme: theme.DefaultTheme(), Variant: theme.VariantLight})
+		}),
+	)
+
+	return container.NewBorder(nil, themes, nil, nil, nil)
+}
+
 func main() {
 	fyneApp := app.NewWithID(appID)
 	logLifecycle(fyneApp)
@@ -76,9 +94,20 @@ func main() {
 	w.SetContent(widget.NewLabel("Hello World! Messing with the front"))
 	w.Resize(fyne.NewSize(400, 400))
 
+	content := container.NewStack()
+	tutorial := container.NewBorder(nil, nil, nil, nil, content)
+	if fyne.CurrentDevice().IsMobile() {
+		w.SetContent(makeNav())
+	} else {
+		split := container.NewHSplit(makeNav(), tutorial)
+		split.Offset = 0.2
+		w.SetContent(split)
+	}
+
 	// Exit cross on the window (with reduce and fullscreen)
 	w.SetCloseIntercept(func() {
 		fmt.Println("Tried to quit")
+		fyneApp.Quit()
 	})
 
 	w.ShowAndRun()
