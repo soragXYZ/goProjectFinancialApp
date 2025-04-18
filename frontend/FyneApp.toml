@@ -1,0 +1,19 @@
+Website = "https://github.com/soragXYZ/freenahi"
+
+[Details]
+Icon = "Icon.png"
+Name = "Freenahi"
+ID = "github.soragXYZ.freenahi"
+Version = "0.1.0"
+Build = 1
+
+[Release]
+  BuildName = "freenahi"
+  Description = "<p>Track your investments. Please see website for details.</p>"
+  License = "AGPL-3.0"
+
+[LinuxAndBSD]
+  GenericName = "Freenahi"
+  Categories = ["Finance"]
+  Comment = "Track your investments"
+  Keywords = ["Freenahi", "finance", "portfolio", "tracker"]
