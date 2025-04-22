@@ -23,6 +23,7 @@ func New() *http.ServeMux {
 	router := http.NewServeMux()
 
 	router.HandleFunc("GET /health/", middleware.Log(middleware.Whitelisted(miscellaneous.HealthCheck)))
+	router.HandleFunc("GET /version/", middleware.Log(middleware.Whitelisted(miscellaneous.Version)))
 	router.HandleFunc("/", middleware.Log(middleware.Whitelisted(miscellaneous.NotFound)))
 
 	router.HandleFunc("POST /webhook/connection_synced/", middleware.Log(middleware.Whitelisted(webhook.ConnectionSynced)))

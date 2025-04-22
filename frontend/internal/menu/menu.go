@@ -8,6 +8,7 @@ import (
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 
+	"freenahiFront/internal/account"
 	"freenahiFront/internal/animation"
 	"freenahiFront/internal/collection"
 	customTheme "freenahiFront/internal/theme"
@@ -47,11 +48,15 @@ var (
 			"Tree",
 			collection.MakeTreeTab,
 		},
+		"accounts": {
+			"Accounts",
+			account.AccountScreen,
+		},
 	}
 
 	// TutorialIndex  defines how our tutorials should be laid out in the index tree
 	TutorialIndex = map[string][]string{
-		"":            {"welcome", "collections", "animations"},
+		"":            {"welcome", "collections", "animations", "accounts"},
 		"collections": {"list", "table", "tree"},
 	}
 )

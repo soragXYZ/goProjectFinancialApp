@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
+	"time"
 
 	"freenahiFront/internal/menu"
 
@@ -11,11 +13,16 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/driver/desktop"
 	"fyne.io/fyne/v2/theme"
+	"github.com/rs/zerolog"
 )
 
 const (
 	appID = "github.soragXYZ.freenahi"
+	// preferenceBackendIP = "currentBackendIP"
+	preferenceLogLevel = "currentLogLevel"
 )
+
+var logger = zerolog.New(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.DateTime}).With().Timestamp().Logger()
 
 // Set system tray if desktop (mini icon like wifi, shield, notifs, etc...)
 func makeTray(app fyne.App) {
@@ -31,21 +38,46 @@ func makeTray(app fyne.App) {
 // Watch events
 func logLifecycle(app fyne.App) {
 	app.Lifecycle().SetOnStarted(func() {
-		log.Println("Lifecycle: Started")
+		logger.Trace().Msg("Started application")
 	})
 	app.Lifecycle().SetOnStopped(func() {
-		log.Println("Lifecycle: Stopped")
+		logger.Trace().Msg("Stopped application")
 	})
 	app.Lifecycle().SetOnEnteredForeground(func() {
-		log.Println("Lifecycle: Entered Foreground")
+		logger.Trace().Msg("Entered foreground")
 	})
 	app.Lifecycle().SetOnExitedForeground(func() {
-		log.Println("Lifecycle: Exited Foreground")
+		logger.Trace().Msg("Exited foreground")
 	})
 }
 
 func main() {
+
 	fyneApp := app.NewWithID(appID)
+
+	// Set logs level
+	logLevel := fyneApp.Preferences().StringWithFallback(preferenceLogLevel, "info")
+	logger.Trace().Str("logLevel", logLevel).Msg("")
+
+	switch logLevel {
+	case "trace":
+		zerolog.SetGlobalLevel(zerolog.TraceLevel)
+	case "debug":
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	case "info":
+		zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	case "warn":
+		zerolog.SetGlobalLevel(zerolog.WarnLevel)
+	case "error":
+		zerolog.SetGlobalLevel(zerolog.ErrorLevel)
+	case "fatal":
+		zerolog.SetGlobalLevel(zerolog.FatalLevel)
+	case "panic":
+		zerolog.SetGlobalLevel(zerolog.PanicLevel)
+	default:
+		logger.Fatal().Msgf("Unsupported value '%s' for log level. Should be trace, debug, info, warn, error, fatal or panic", logLevel)
+	}
+
 	logLifecycle(fyneApp)
 	makeTray(fyneApp)
 
