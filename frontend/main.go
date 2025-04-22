@@ -46,30 +46,28 @@ func logLifecycle(app fyne.App) {
 	})
 }
 
-// Create the option menu
-func makeMenu(fyneApp fyne.App, w fyne.Window) *fyne.MainMenu {
+func makeTopMenu(app fyne.App) *fyne.MainMenu {
 	helpMenu := fyne.NewMenu("Help",
 		fyne.NewMenuItem("Documentation", func() {
 			u, _ := url.Parse("https://soragxyz.github.io/freenahi/")
-			_ = fyneApp.OpenURL(u)
+			_ = app.OpenURL(u)
 		}),
 		fyne.NewMenuItemSeparator(),
 		fyne.NewMenuItem("Contribute", func() {
 			u, _ := url.Parse("https://soragxyz.github.io/freenahi/other/contribute/")
-			_ = fyneApp.OpenURL(u)
+			_ = app.OpenURL(u)
 		}),
-		// a quit item will be appended to our first menu, cannot remove it ?
+		// a quit item will be appended to our first menu, cannot remove it
 	)
 
 	// Add new entries here if needed
-	main := fyne.NewMainMenu(
+	return fyne.NewMainMenu(
 		helpMenu,
 	)
-	return main
 }
 
-func makeNav(setTutorial func(tutorial helper.Tutorial), loadPrevious bool, win fyne.Window) fyne.CanvasObject {
-	app := fyne.CurrentApp()
+func makeNav(app fyne.App, setTutorial func(tutorial helper.Tutorial), win fyne.Window) fyne.CanvasObject {
+
 	tree := &widget.Tree{
 		ChildUIDs: func(uid string) []string {
 			return helper.TutorialIndex[uid]
@@ -96,17 +94,13 @@ func makeNav(setTutorial func(tutorial helper.Tutorial), loadPrevious bool, win 
 					f()
 				}
 				helper.OnChangeFuncs = nil // Loading a page registers a new cleanup.
-
-				app.Preferences().SetString(preferenceCurrentTutorial, uid)
 				setTutorial(t)
 			}
 		},
 	}
 
-	if loadPrevious {
-		currentPref := app.Preferences().StringWithFallback(preferenceCurrentTutorial, "welcome")
-		tree.Select(currentPref)
-	}
+	// Default to the welcome Menu
+	tree.Select("welcome")
 
 	themes := container.NewGridWithColumns(3,
 		widget.NewButton("Dark", func() {
@@ -123,63 +117,30 @@ func makeNav(setTutorial func(tutorial helper.Tutorial), loadPrevious bool, win 
 	return container.NewBorder(nil, themes, nil, nil, tree)
 }
 
-var topWindow fyne.Window
-
-const preferenceCurrentTutorial = "welcome"
-
 func main() {
 	fyneApp := app.NewWithID(appID)
 	logLifecycle(fyneApp)
 	makeTray(fyneApp)
 
 	w := fyneApp.NewWindow("Main Window")
-	topWindow = w
-
-	w.SetMainMenu(makeMenu(fyneApp, w))
 	w.SetMaster()
-	w.SetContent(widget.NewLabel("Hello World! Messing with the front"))
 	w.Resize(fyne.NewSize(800, 800))
 
+	w.SetMainMenu(makeTopMenu(fyneApp))
+
 	content := container.NewStack()
-	title := widget.NewLabel("Component name")
-	intro := widget.NewLabel("An introduction would probably go\nhere, as well as a")
-	top := container.NewVBox(title, widget.NewSeparator(), intro)
+
 	setTutorial := func(t helper.Tutorial) {
-		if fyne.CurrentDevice().IsMobile() {
-			child := fyneApp.NewWindow(t.Title)
-			topWindow = child
-			child.SetContent(t.View(topWindow))
-			child.Show()
-			child.SetOnClosed(func() {
-				topWindow = w
-			})
-			return
-		}
-
-		title.SetText(t.Title)
-		isMarkdown := len(t.Intro) == 0
-		if !isMarkdown {
-			intro.SetText(t.Intro)
-		}
-
-		if t.Title == "Welcome" || isMarkdown {
-			top.Hide()
-		} else {
-			top.Show()
-		}
-
 		content.Objects = []fyne.CanvasObject{t.View(w)}
 		content.Refresh()
 	}
 
 	tutorial := container.NewBorder(nil, nil, nil, nil, content)
-	if fyne.CurrentDevice().IsMobile() {
-		w.SetContent(makeNav(setTutorial, false, w))
-	} else {
-		split := container.NewHSplit(makeNav(setTutorial, true, w), tutorial)
-		split.Offset = 0.2
-		w.SetContent(split)
-	}
+
+	// Split
+	split := container.NewHSplit(makeNav(fyneApp, setTutorial, w), tutorial)
+	split.Offset = 0.2
+	w.SetContent(split)
 
 	// Exit cross on the window (with reduce and fullscreen)
 	w.SetCloseIntercept(func() {
