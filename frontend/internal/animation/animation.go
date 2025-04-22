@@ -1,4 +1,4 @@
-package helper
+package animation
 
 import (
 	"image/color"
@@ -11,7 +11,7 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
-func makeAnimationScreen(_ fyne.Window) fyne.CanvasObject {
+func MakeAnimationScreen(_ fyne.Window) fyne.CanvasObject {
 	curves := makeAnimationCurves()
 	curves.Move(fyne.NewPos(0, 140+theme.Padding()))
 	return container.NewWithoutLayout(makeAnimationCanvas(), curves)
@@ -46,8 +46,6 @@ func makeAnimationCanvas() fyne.CanvasObject {
 	a2.Curve = fyne.AnimationLinear
 	a2.Start()
 
-	OnChangeFuncs = append(OnChangeFuncs, a.Stop, a2.Stop)
-
 	running := true
 	var toggle *widget.Button
 	toggle = widget.NewButton("Stop", func() {
@@ -72,8 +70,6 @@ func makeAnimationCurves() fyne.CanvasObject {
 	label2, box2, a2 := makeAnimationCurveItem("EaseIn", fyne.AnimationEaseIn, 30+theme.Padding())
 	label3, box3, a3 := makeAnimationCurveItem("EaseOut", fyne.AnimationEaseOut, 60+theme.Padding()*2)
 	label4, box4, a4 := makeAnimationCurveItem("Linear", fyne.AnimationLinear, 90+theme.Padding()*3)
-
-	OnChangeFuncs = append(OnChangeFuncs, a1.Stop, a2.Stop, a3.Stop, a4.Stop)
 
 	start := widget.NewButton("Compare", func() {
 		a1.Start()

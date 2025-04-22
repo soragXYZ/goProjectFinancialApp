@@ -1,4 +1,4 @@
-package helper
+package welcome
 
 import (
 	"image/color"
@@ -10,7 +10,7 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
-func welcomeScreen(_ fyne.Window) fyne.CanvasObject {
+func WelcomeScreen(_ fyne.Window) fyne.CanvasObject {
 	logo := canvas.NewImageFromFile("./Icon.png")
 	logo.FillMode = canvas.ImageFillContain
 	if fyne.CurrentDevice().IsMobile() {
