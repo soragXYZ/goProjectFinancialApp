@@ -1,9 +1,11 @@
 package menu
 
 import (
+	"fmt"
 	"net/url"
 
 	"fyne.io/fyne/v2"
+	fyneSettings "fyne.io/fyne/v2/cmd/fyne_settings/settings"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
@@ -11,6 +13,7 @@ import (
 	"freenahiFront/internal/account"
 	"freenahiFront/internal/animation"
 	"freenahiFront/internal/collection"
+	"freenahiFront/internal/settings"
 	customTheme "freenahiFront/internal/theme"
 	"freenahiFront/internal/welcome"
 )
@@ -62,7 +65,48 @@ var (
 )
 
 func MakeTopMenu(app fyne.App) *fyne.MainMenu {
-	helpMenu := fyne.NewMenu("Help",
+	uiFyneSettings := func() {
+		w := app.NewWindow("Fyne Settings")
+		w.SetContent(fyneSettings.NewSettings().LoadAppearanceScreen(w))
+		w.Resize(fyne.NewSize(440, 520))
+		w.Show()
+	}
+
+	oula := settings.SettingAction{
+		Label: "Oula",
+		Action: func() {
+			fmt.Println("Function oula")
+		},
+	}
+	testBis := settings.SettingAction{
+		Label: "Open new window",
+		Action: func() {
+			win := app.NewWindow("Test Bis Win")
+			win.SetContent(widget.NewLabel("Test bis entered"))
+			win.Resize(fyne.NewSize(800, 800))
+			win.Show()
+		},
+	}
+	actions := []settings.SettingAction{oula, testBis}
+
+	generalSettings := func() {
+		win := app.NewWindow("General Settings")
+
+		tabs := container.NewAppTabs(
+			container.NewTabItem("Tab 1", widget.NewLabel("Hello")),
+			container.NewTabItem("General", settings.MakeSettingsPage("General", widget.NewLabel("World"), actions)),
+		)
+
+		tabs.SetTabLocation(container.TabLocationLeading)
+		win.SetContent(tabs)
+		win.Resize(fyne.NewSize(800, 800))
+		win.Show()
+	}
+
+	helpMenu := fyne.NewMenu("Settings",
+		fyne.NewMenuItem("Interface Settings", uiFyneSettings),
+		fyne.NewMenuItem("General Settings", generalSettings),
+		fyne.NewMenuItemSeparator(),
 		fyne.NewMenuItem("Documentation", func() {
 			u, _ := url.Parse("https://soragxyz.github.io/freenahi/")
 			_ = app.OpenURL(u)

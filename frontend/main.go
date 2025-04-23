@@ -17,7 +17,8 @@ import (
 )
 
 const (
-	appID = "github.soragXYZ.freenahi"
+	appID   = "github.soragXYZ.freenahi"
+	appName = "Freenahi"
 	// preferenceBackendIP = "currentBackendIP"
 	preferenceLogLevel = "currentLogLevel"
 )
@@ -81,7 +82,7 @@ func main() {
 	logLifecycle(fyneApp)
 	makeTray(fyneApp)
 
-	w := fyneApp.NewWindow("Main Window")
+	w := fyneApp.NewWindow(appName)
 	w.SetMaster()
 	w.Resize(fyne.NewSize(800, 800))
 
