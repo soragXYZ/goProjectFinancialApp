@@ -2,6 +2,8 @@ package settings
 
 import (
 	"fmt"
+	"maps"
+	"slices"
 	"time"
 
 	"fyne.io/fyne/v2"
@@ -11,6 +13,7 @@ import (
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	kxwidget "github.com/ErikKalkoken/fyne-kx/widget"
+	"github.com/rs/zerolog"
 )
 
 type settingVariant uint
@@ -22,6 +25,16 @@ const (
 	settingSeperator
 	settingSwitch
 )
+
+var logLevelName2Level = map[string]zerolog.Level{
+	"trace": zerolog.TraceLevel,
+	"debug": zerolog.DebugLevel,
+	"info":  zerolog.InfoLevel,
+	"warn":  zerolog.WarnLevel,
+	"error": zerolog.ErrorLevel,
+	"fatal": zerolog.FatalLevel,
+	"panic": zerolog.PanicLevel,
+}
 
 type ContextMenuButton struct {
 	widget.Button
@@ -78,7 +91,7 @@ func NewSettingItemOptions(
 	defaultV string,
 	getter func() string,
 	setter func(v string),
-	window func() fyne.Window,
+	win fyne.Window,
 ) SettingItem {
 	return SettingItem{
 		Label: label,
@@ -92,7 +105,6 @@ func NewSettingItemOptions(
 		onSelected: func(it SettingItem, refresh func()) {
 			sel := widget.NewRadioGroup(options, setter)
 			sel.SetSelected(it.Getter().(string))
-			w := window()
 			d := makeSettingDialog(
 				sel,
 				it.Label,
@@ -101,7 +113,7 @@ func NewSettingItemOptions(
 					sel.SetSelected(defaultV)
 				},
 				refresh,
-				w,
+				win,
 			)
 			d.Show()
 		},
@@ -169,8 +181,8 @@ func NewSettingItemSwitch(
 }
 
 // NewSettingList returns a new SettingList widget.
-func NewSettingList(items []SettingItem) *SettingList {
-	w := &SettingList{SelectDelay: 200 * time.Millisecond}
+func NewSettingList(items []SettingItem) *widget.List {
+	w := &widget.List{}
 	w.Length = func() int {
 		return len(items)
 	}
@@ -198,13 +210,13 @@ func NewSettingList(items []SettingItem) *SettingList {
 		sw := right[0].(*kxwidget.Switch)
 		value := right[1].(*widget.Label)
 		main := border[0].(*fyne.Container).Objects
-		// hint := main[2].(*Label)
-		// if it.Hint != "" {
-		// 	hint.SetText(it.Hint)
-		// 	hint.Show()
-		// } else {
-		// 	hint.Hide()
-		// }
+		hint := main[2].(*widget.Label)
+		if it.Hint != "" {
+			hint.SetText(it.Hint)
+			hint.Show()
+		} else {
+			hint.Hide()
+		}
 		label := main[1].(*widget.Label)
 		label.Text = it.Label
 		label.TextStyle.Bold = false
@@ -252,10 +264,7 @@ func NewSettingList(items []SettingItem) *SettingList {
 		it.onSelected(it, func() {
 			w.RefreshItem(id)
 		})
-		go func() {
-			time.Sleep(w.SelectDelay)
-			w.UnselectAll()
-		}()
+		w.UnselectAll()
 	}
 	w.HideSeparators = true
 	w.ExtendBaseWidget(w)
@@ -278,4 +287,9 @@ func MakeSettingsPage(title string, content fyne.CanvasObject, actions []Setting
 		nil,
 		container.NewScroll(content),
 	)
+}
+
+func LogLevelNames() []string {
+	x := slices.Collect(maps.Keys(logLevelName2Level))
+	return x
 }

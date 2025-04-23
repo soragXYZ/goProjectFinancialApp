@@ -72,29 +72,49 @@ func MakeTopMenu(app fyne.App) *fyne.MainMenu {
 		w.Show()
 	}
 
-	oula := settings.SettingAction{
-		Label: "Oula",
-		Action: func() {
-			fmt.Println("Function oula")
-		},
-	}
-	testBis := settings.SettingAction{
-		Label: "Open new window",
-		Action: func() {
-			win := app.NewWindow("Test Bis Win")
-			win.SetContent(widget.NewLabel("Test bis entered"))
-			win.Resize(fyne.NewSize(800, 800))
-			win.Show()
-		},
-	}
-	actions := []settings.SettingAction{oula, testBis}
-
 	generalSettings := func() {
 		win := app.NewWindow("General Settings")
 
+		oula := settings.SettingAction{
+			Label: "Oula",
+			Action: func() {
+				fmt.Println("Function oula")
+			},
+		}
+		testBis := settings.SettingAction{
+			Label: "Open new window",
+			Action: func() {
+				win := app.NewWindow("Test Bis Win")
+				win.SetContent(widget.NewLabel("Test bis entered"))
+				win.Resize(fyne.NewSize(800, 800))
+				win.Show()
+			},
+		}
+		actions := []settings.SettingAction{oula, testBis}
+
+		logLevel := settings.NewSettingItemOptions(
+			"Log level",
+			"Set current log level",
+			settings.LogLevelNames(),
+			"nil value",
+			func() string {
+				return "nice"
+			},
+			func(v string) {
+				return
+			},
+			win,
+		)
+		items := []settings.SettingItem{
+			settings.NewSettingItemHeading("Application"),
+			logLevel,
+		}
+
+		list := settings.NewSettingList(items)
+
 		tabs := container.NewAppTabs(
 			container.NewTabItem("Tab 1", widget.NewLabel("Hello")),
-			container.NewTabItem("General", settings.MakeSettingsPage("General", widget.NewLabel("World"), actions)),
+			container.NewTabItem("General", settings.MakeSettingsPage("General", list, actions)),
 		)
 
 		tabs.SetTabLocation(container.TabLocationLeading)
