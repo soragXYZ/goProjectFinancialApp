@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"freenahiFront/internal/menu"
+	"freenahiFront/internal/settings"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
@@ -58,26 +59,9 @@ func main() {
 
 	// Set logs level
 	logLevel := fyneApp.Preferences().StringWithFallback(preferenceLogLevel, "info")
-	logger.Trace().Str("logLevel", logLevel).Msg("")
+	logger.Trace().Str("preference log level", logLevel).Msg("")
 
-	switch logLevel {
-	case "trace":
-		zerolog.SetGlobalLevel(zerolog.TraceLevel)
-	case "debug":
-		zerolog.SetGlobalLevel(zerolog.DebugLevel)
-	case "info":
-		zerolog.SetGlobalLevel(zerolog.InfoLevel)
-	case "warn":
-		zerolog.SetGlobalLevel(zerolog.WarnLevel)
-	case "error":
-		zerolog.SetGlobalLevel(zerolog.ErrorLevel)
-	case "fatal":
-		zerolog.SetGlobalLevel(zerolog.FatalLevel)
-	case "panic":
-		zerolog.SetGlobalLevel(zerolog.PanicLevel)
-	default:
-		logger.Fatal().Msgf("Unsupported value '%s' for log level. Should be trace, debug, info, warn, error, fatal or panic", logLevel)
-	}
+	settings.SetLogLevel(logLevel)
 
 	logLifecycle(fyneApp)
 	makeTray(fyneApp)

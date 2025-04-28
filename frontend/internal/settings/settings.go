@@ -3,6 +3,7 @@ package settings
 import (
 	"fmt"
 	"maps"
+	"os"
 	"slices"
 	"time"
 
@@ -25,6 +26,12 @@ const (
 	settingSeperator
 	settingSwitch
 )
+
+const (
+	SettingLogLevelDefault = "info"
+)
+
+var logger = zerolog.New(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.DateTime}).With().Timestamp().Logger()
 
 var logLevelName2Level = map[string]zerolog.Level{
 	"trace": zerolog.TraceLevel,
@@ -117,6 +124,7 @@ func NewSettingItemOptions(
 			)
 			d.Show()
 		},
+		variant: settingCustom,
 	}
 }
 
@@ -292,4 +300,30 @@ func MakeSettingsPage(title string, content fyne.CanvasObject, actions []Setting
 func LogLevelNames() []string {
 	x := slices.Collect(maps.Keys(logLevelName2Level))
 	return x
+}
+
+func GetLogLevel() string {
+	return zerolog.GlobalLevel().String()
+}
+
+func SetLogLevel(logLevel string) {
+	switch logLevel {
+	case "trace":
+		zerolog.SetGlobalLevel(zerolog.TraceLevel)
+	case "debug":
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	case "info":
+		zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	case "warn":
+		zerolog.SetGlobalLevel(zerolog.WarnLevel)
+	case "error":
+		zerolog.SetGlobalLevel(zerolog.ErrorLevel)
+	case "fatal":
+		zerolog.SetGlobalLevel(zerolog.FatalLevel)
+	case "panic":
+		zerolog.SetGlobalLevel(zerolog.PanicLevel)
+	default:
+		logger.Fatal().Msgf("Unsupported value '%s' for log level. Should be trace, debug, info, warn, error, fatal or panic", logLevel)
+	}
+	logger.Info().Msgf("Log level set to %s", logLevel)
 }

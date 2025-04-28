@@ -96,13 +96,9 @@ func MakeTopMenu(app fyne.App) *fyne.MainMenu {
 			"Log level",
 			"Set current log level",
 			settings.LogLevelNames(),
-			"nil value",
-			func() string {
-				return "nice"
-			},
-			func(v string) {
-				return
-			},
+			settings.SettingLogLevelDefault,
+			settings.GetLogLevel,
+			settings.SetLogLevel,
 			win,
 		)
 		items := []settings.SettingItem{
