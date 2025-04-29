@@ -18,9 +18,8 @@ import (
 )
 
 const (
-	appID   = "github.soragXYZ.freenahi"
-	appName = "Freenahi"
-	// preferenceBackendIP = "currentBackendIP"
+	appID              = "github.soragXYZ.freenahi"
+	appName            = "Freenahi"
 	preferenceLogLevel = "currentLogLevel"
 )
 

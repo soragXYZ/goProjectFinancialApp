@@ -9,6 +9,7 @@ import (
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/data/validation"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
@@ -21,14 +22,15 @@ type settingVariant uint
 
 const (
 	settingUndefined settingVariant = iota
-	settingCustom
+	settingText
 	settingHeading
 	settingSeperator
 	settingSwitch
 )
 
 const (
-	SettingLogLevelDefault = "info"
+	SettingLogLevelDefault  = "info"
+	SettingBackendIPDefault = "localhost"
 )
 
 var logger = zerolog.New(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.DateTime}).With().Timestamp().Logger()
@@ -124,7 +126,7 @@ func NewSettingItemOptions(
 			)
 			d.Show()
 		},
-		variant: settingCustom,
+		variant: settingText,
 	}
 }
 
@@ -164,6 +166,49 @@ func makeSettingDialog(
 
 func NewSettingItemHeading(label string) SettingItem {
 	return SettingItem{Label: label, variant: settingHeading}
+}
+
+// NewSettingItemUserInput creates a user input setting in a setting list.
+func NewSettingItemUserInput(
+	label, hint string,
+	defaultV string,
+	getter func() string,
+	setter func(v string),
+	win fyne.Window,
+) SettingItem {
+	return SettingItem{
+		Label: label,
+		Hint:  hint,
+		Getter: func() any {
+			return getter()
+		},
+		Setter: func(v any) {
+			setter(v.(string))
+		},
+		onSelected: func(it SettingItem, refresh func()) {
+
+			userEntry := widget.NewEntry()
+			userEntry.SetPlaceHolder("Enter backend IP...")
+			// ToDo: change the regex for Ipv4 and Ipv6
+			userEntry.Validator = validation.NewRegexp(`^[A-Za-z0-9.:]+$`, "userEntry can only contain letters, numbers, '.', and ':'")
+
+			items := []*widget.FormItem{
+				widget.NewFormItem("Backend IP", userEntry),
+			}
+
+			_, s := win.Canvas().InteractiveArea()
+			d := dialog.NewForm("Set the backend server IP", "Save", "Cancel", items, func(b bool) {
+				if !b {
+					return
+				}
+				it.Setter(userEntry.Text)
+				refresh()
+			}, win)
+			d.Resize(fyne.NewSize(s.Width*0.5, 100))
+			d.Show()
+		},
+		variant: settingText,
+	}
 }
 
 // NewSettingItemSwitch creates a switch setting in a setting list.
@@ -241,7 +286,7 @@ func NewSettingList(items []SettingItem) *widget.List {
 			sw.On = it.Getter().(bool)
 			sw.Show()
 			sw.Refresh()
-		case settingCustom:
+		case settingText:
 			value.SetText(fmt.Sprint(it.Getter()))
 			value.Show()
 			sw.Hide()

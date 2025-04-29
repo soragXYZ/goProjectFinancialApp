@@ -18,6 +18,11 @@ import (
 	"freenahiFront/internal/welcome"
 )
 
+const (
+	settingBackendIPDefault = "localhost"
+	preferenceBackendIP     = "currentBackendIP"
+)
+
 // Tutorial defines the data structure for a tutorial
 type Tutorial struct {
 	Title string
@@ -101,16 +106,30 @@ func MakeTopMenu(app fyne.App) *fyne.MainMenu {
 			settings.SetLogLevel,
 			win,
 		)
+		backendIP := settings.NewSettingItemUserInput(
+			"Backend IP",
+			"Set the IP of the backend",
+			settings.SettingBackendIPDefault,
+			func() string {
+				return app.Preferences().StringWithFallback(preferenceBackendIP, settingBackendIPDefault)
+			},
+			func(v string) {
+				app.Preferences().SetString(preferenceBackendIP, v)
+			},
+			win,
+		)
+
 		items := []settings.SettingItem{
 			settings.NewSettingItemHeading("Application"),
 			logLevel,
+			backendIP,
 		}
 
 		list := settings.NewSettingList(items)
 
 		tabs := container.NewAppTabs(
-			container.NewTabItem("Tab 1", widget.NewLabel("Hello")),
 			container.NewTabItem("General", settings.MakeSettingsPage("General", list, actions)),
+			container.NewTabItem("Tab 1", widget.NewLabel("Hello")),
 		)
 
 		tabs.SetTabLocation(container.TabLocationLeading)
