@@ -5,12 +5,16 @@ import (
 	"maps"
 	"os"
 	"slices"
+	"strconv"
 	"time"
+
+	customTheme "freenahiFront/internal/theme"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/data/validation"
 	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/driver/desktop"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
@@ -29,8 +33,20 @@ const (
 )
 
 const (
-	SettingLogLevelDefault  = "info"
-	SettingBackendIPDefault = "localhost"
+	LogLevelDefault    = "info"
+	PreferenceLogLevel = "currentLogLevel"
+
+	BackendIPDefault    = "localhost"
+	PreferenceBackendIP = "currentBackendIP"
+
+	BackendPortDefault    = "8080"
+	PreferenceBackendPort = "currentBackendPort"
+
+	FullscreenDefault    = false
+	PreferenceFullscreen = "currentFullscreen"
+
+	ThemeDefault    = "light"
+	PreferenceTheme = "currentTheme"
 )
 
 var logger = zerolog.New(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.DateTime}).With().Timestamp().Logger()
@@ -170,7 +186,7 @@ func NewSettingItemHeading(label string) SettingItem {
 
 // NewSettingItemUserInput creates a user input setting in a setting list.
 func NewSettingItemUserInput(
-	label, hint string,
+	label, hint, placeholder, regex, regexError string,
 	defaultV string,
 	getter func() string,
 	setter func(v string),
@@ -188,23 +204,22 @@ func NewSettingItemUserInput(
 		onSelected: func(it SettingItem, refresh func()) {
 
 			userEntry := widget.NewEntry()
-			userEntry.SetPlaceHolder("Enter backend IP...")
-			// ToDo: change the regex for Ipv4 and Ipv6
-			userEntry.Validator = validation.NewRegexp(`^[A-Za-z0-9.:]+$`, "userEntry can only contain letters, numbers, '.', and ':'")
+			userEntry.SetPlaceHolder(placeholder)
+			userEntry.Validator = validation.NewRegexp(regex, regexError)
 
 			items := []*widget.FormItem{
-				widget.NewFormItem("Backend IP", userEntry),
+				widget.NewFormItem(hint, userEntry),
 			}
 
 			_, s := win.Canvas().InteractiveArea()
-			d := dialog.NewForm("Set the backend server IP", "Save", "Cancel", items, func(b bool) {
+			d := dialog.NewForm(label, "Save", "Cancel", items, func(b bool) {
 				if !b {
 					return
 				}
 				it.Setter(userEntry.Text)
 				refresh()
 			}, win)
-			d.Resize(fyne.NewSize(s.Width*0.5, 100))
+			d.Resize(fyne.NewSize(s.Width*0.7, 100))
 			d.Show()
 		},
 		variant: settingText,
@@ -230,6 +245,7 @@ func NewSettingItemSwitch(
 			it.Setter(!it.Getter().(bool))
 			refresh()
 		},
+		variant: settingSwitch,
 	}
 }
 
@@ -324,12 +340,16 @@ func NewSettingList(items []SettingItem) *widget.List {
 	return w
 }
 
+// NewSettingItemSeperator creates a seperator in a setting list.
+func NewSettingItemSeperator() SettingItem {
+	return SettingItem{variant: settingSeperator}
+}
+
 func MakeSettingsPage(title string, content fyne.CanvasObject, actions []SettingAction) fyne.CanvasObject {
 	t := widget.NewLabel(title)
 	t.TextStyle.Bold = true
 	items := make([]*fyne.MenuItem, 0)
 	for _, action := range actions {
-		fmt.Println(action.Label)
 		items = append(items, fyne.NewMenuItem(action.Label, action.Action))
 	}
 	options := NewContextMenuButtonWithIcon(theme.MoreHorizontalIcon(), "More", fyne.NewMenu("", items...))
@@ -347,11 +367,7 @@ func LogLevelNames() []string {
 	return x
 }
 
-func GetLogLevel() string {
-	return zerolog.GlobalLevel().String()
-}
-
-func SetLogLevel(logLevel string) {
+func SetLogLevel(logLevel string, app fyne.App) {
 	switch logLevel {
 	case "trace":
 		zerolog.SetGlobalLevel(zerolog.TraceLevel)
@@ -370,5 +386,68 @@ func SetLogLevel(logLevel string) {
 	default:
 		logger.Fatal().Msgf("Unsupported value '%s' for log level. Should be trace, debug, info, warn, error, fatal or panic", logLevel)
 	}
+	app.Preferences().SetString(PreferenceLogLevel, logLevel)
 	logger.Info().Msgf("Log level set to %s", logLevel)
+}
+
+func SetTheme(value string, app fyne.App) {
+	switch value {
+	case "light":
+		app.Settings().SetTheme(&customTheme.ForcedVariant{Theme: theme.DefaultTheme(), Variant: theme.VariantLight})
+	case "dark":
+		app.Settings().SetTheme(&customTheme.ForcedVariant{Theme: theme.DefaultTheme(), Variant: theme.VariantDark})
+	default:
+		logger.Fatal().Msgf("Unsupported value '%s' for theme. Should be light or dark", value)
+	}
+	app.Preferences().SetString(PreferenceTheme, value)
+	logger.Info().Msgf("Theme set to %s", value)
+}
+
+func SetBackendIP(value string, app fyne.App) {
+	app.Preferences().SetString(PreferenceBackendIP, value)
+	logger.Info().Msgf("Backend IP set to %s", value)
+}
+
+func SetBackendPort(value string, app fyne.App) {
+	app.Preferences().SetString(PreferenceBackendPort, value)
+	logger.Info().Msgf("Backend port set to %s", value)
+}
+
+// GetFullscreen returns the PreferenceFullscreen app preference value
+func GetFullscreen(app fyne.App) bool {
+	return app.Preferences().BoolWithFallback(PreferenceFullscreen, FullscreenDefault)
+}
+
+func SetFullScreen(value bool, app fyne.App, topWin fyne.Window, currentWin fyne.Window) {
+	app.Preferences().SetBool(PreferenceFullscreen, value)
+	topWin.SetFullScreen(app.Preferences().BoolWithFallback(PreferenceFullscreen, FullscreenDefault))
+	currentWin.Show()
+	logger.Info().Msgf("Fullscreen set to %s", strconv.FormatBool(value))
+}
+
+// Set system tray if desktop (mini icon like wifi, shield, notifs, etc...)
+func MakeTray(app fyne.App) {
+	if desk, isDesktop := app.(desktop.App); isDesktop {
+		h := fyne.NewMenuItem("Come back to Freenahi", func() {})
+		h.Icon = theme.HomeIcon()
+		h.Action = func() { logger.Trace().Msg("System tray menu tapped for Welcome") }
+		menu := fyne.NewMenu("SystemTrayMenu", h)
+		desk.SetSystemTrayMenu(menu)
+	}
+}
+
+// Watch events
+func LogLifecycle(app fyne.App) {
+	app.Lifecycle().SetOnStarted(func() {
+		logger.Trace().Msg("Started application")
+	})
+	app.Lifecycle().SetOnStopped(func() {
+		logger.Trace().Msg("Stopped application")
+	})
+	app.Lifecycle().SetOnEnteredForeground(func() {
+		logger.Trace().Msg("Entered foreground")
+	})
+	app.Lifecycle().SetOnExitedForeground(func() {
+		logger.Trace().Msg("Exited foreground")
+	})
 }

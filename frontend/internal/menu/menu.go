@@ -1,26 +1,18 @@
 package menu
 
 import (
-	"fmt"
 	"net/url"
 
 	"fyne.io/fyne/v2"
 	fyneSettings "fyne.io/fyne/v2/cmd/fyne_settings/settings"
 	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 
 	"freenahiFront/internal/account"
 	"freenahiFront/internal/animation"
 	"freenahiFront/internal/collection"
 	"freenahiFront/internal/settings"
-	customTheme "freenahiFront/internal/theme"
 	"freenahiFront/internal/welcome"
-)
-
-const (
-	settingBackendIPDefault = "localhost"
-	preferenceBackendIP     = "currentBackendIP"
 )
 
 // Tutorial defines the data structure for a tutorial
@@ -69,7 +61,7 @@ var (
 	}
 )
 
-func MakeTopMenu(app fyne.App) *fyne.MainMenu {
+func MakeTopMenu(app fyne.App, topWindow fyne.Window) *fyne.MainMenu {
 	uiFyneSettings := func() {
 		w := app.NewWindow("Fyne Settings")
 		w.SetContent(fyneSettings.NewSettings().LoadAppearanceScreen(w))
@@ -80,52 +72,101 @@ func MakeTopMenu(app fyne.App) *fyne.MainMenu {
 	generalSettings := func() {
 		win := app.NewWindow("General Settings")
 
-		oula := settings.SettingAction{
-			Label: "Oula",
-			Action: func() {
-				fmt.Println("Function oula")
+		theme := settings.NewSettingItemOptions(
+			"Theme",
+			"Set theme color to dark or light",
+			[]string{"light", "dark"},
+			settings.ThemeDefault,
+			func() string {
+				return app.Preferences().StringWithFallback(settings.PreferenceTheme, settings.ThemeDefault)
 			},
-		}
-		testBis := settings.SettingAction{
-			Label: "Open new window",
-			Action: func() {
-				win := app.NewWindow("Test Bis Win")
-				win.SetContent(widget.NewLabel("Test bis entered"))
-				win.Resize(fyne.NewSize(800, 800))
-				win.Show()
+			func(v string) {
+				settings.SetTheme(v, app)
 			},
-		}
-		actions := []settings.SettingAction{oula, testBis}
-
+			win,
+		)
+		fullscreen := settings.NewSettingItemSwitch(
+			"Fullscreen",
+			"App will go fullscreen.",
+			func() bool {
+				return app.Preferences().BoolWithFallback(settings.PreferenceFullscreen, settings.FullscreenDefault)
+			},
+			func(v bool) {
+				settings.SetFullScreen(v, app, topWindow, win)
+			},
+		)
 		logLevel := settings.NewSettingItemOptions(
 			"Log level",
 			"Set current log level",
 			settings.LogLevelNames(),
-			settings.SettingLogLevelDefault,
-			settings.GetLogLevel,
-			settings.SetLogLevel,
+			settings.LogLevelDefault,
+			func() string {
+				return app.Preferences().StringWithFallback(settings.PreferenceLogLevel, settings.LogLevelDefault)
+			},
+			func(v string) {
+				settings.SetLogLevel(v, app)
+			},
 			win,
 		)
 		backendIP := settings.NewSettingItemUserInput(
 			"Backend IP",
 			"Set the IP of the backend",
-			settings.SettingBackendIPDefault,
+			"Must be IPv4. Ex: 192.168.1.1",
+			`^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$|localhost$`, // IPv4 or localhost regex
+			"userEntry can only contain letters, numbers, '.', and ':'",
+			settings.BackendIPDefault,
 			func() string {
-				return app.Preferences().StringWithFallback(preferenceBackendIP, settingBackendIPDefault)
+				return app.Preferences().StringWithFallback(settings.PreferenceBackendIP, settings.BackendIPDefault)
 			},
 			func(v string) {
-				app.Preferences().SetString(preferenceBackendIP, v)
+				settings.SetBackendIP(v, app)
+			},
+			win,
+		)
+		backendPort := settings.NewSettingItemUserInput(
+			"Backend Port",
+			"Set the port of the backend",
+			"Must be a port. Ex: 8080",
+			"^([1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$", // 0-65535 port regex
+			"userEntry can only contain letters, numbers, '.', and ':'",
+			settings.BackendPortDefault,
+			func() string {
+				return app.Preferences().StringWithFallback(settings.PreferenceBackendPort, settings.BackendPortDefault)
+			},
+			func(v string) {
+				settings.SetBackendPort(v, app)
 			},
 			win,
 		)
 
 		items := []settings.SettingItem{
+			settings.NewSettingItemHeading("Visual"),
+			theme,
+			fullscreen,
+			settings.NewSettingItemSeperator(),
 			settings.NewSettingItemHeading("Application"),
 			logLevel,
+			settings.NewSettingItemSeperator(),
+			settings.NewSettingItemHeading("Backend"),
 			backendIP,
+			backendPort,
 		}
 
 		list := settings.NewSettingList(items)
+
+		reset := settings.SettingAction{
+			Label: "Reset to default",
+			Action: func() {
+				settings.SetTheme(settings.ThemeDefault, app)
+				settings.SetFullScreen(settings.FullscreenDefault, app, topWindow, win)
+				settings.SetLogLevel(settings.LogLevelDefault, app)
+				settings.SetBackendIP(settings.BackendIPDefault, app)
+				settings.SetBackendPort(settings.BackendPortDefault, app)
+				list.Refresh()
+			},
+		}
+
+		actions := []settings.SettingAction{reset}
 
 		tabs := container.NewAppTabs(
 			container.NewTabItem("General", settings.MakeSettingsPage("General", list, actions)),
@@ -191,18 +232,5 @@ func MakeNav(app fyne.App, setTutorial func(tutorial Tutorial), win fyne.Window)
 
 	// Default to the welcome Menu
 	tree.Select("welcome")
-
-	themes := container.NewGridWithColumns(3,
-		widget.NewButton("Dark", func() {
-			app.Settings().SetTheme(&customTheme.ForcedVariant{Theme: theme.DefaultTheme(), Variant: theme.VariantDark})
-		}),
-		widget.NewButton("Light", func() {
-			app.Settings().SetTheme(&customTheme.ForcedVariant{Theme: theme.DefaultTheme(), Variant: theme.VariantLight})
-		}),
-		widget.NewButton("Fullscreen", func() {
-			win.SetFullScreen(!win.FullScreen())
-		}),
-	)
-
-	return container.NewBorder(nil, themes, nil, nil, tree)
+	return container.NewBorder(nil, nil, nil, nil, tree)
 }

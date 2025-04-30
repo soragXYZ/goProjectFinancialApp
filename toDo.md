@@ -1,6 +1,6 @@
+* Backend
 - DB datetime datetime auto / TIMESTAMP ? DEFAULT CURRENT_TIMESTAMP ???
 - Write unit tests
-- Write documentation and README
 - Form validation ?
 - godoc / swagger ?
 - Verify Bearer token sent from webhooks to authenticate (we only use IP for now)
@@ -8,5 +8,10 @@
 - Subrouting for endpoints ?
     https://codewithflash.com/advanced-routing-with-go-122
     https://dev.to/kengowada/go-routing-101-handling-and-grouping-routes-with-nethttp-4k0e
-- Create a price history DB to get historical data for invest
-- Start the frontend when price history DB is good
+
+* Documentation
+- Complete it
+
+* Frontend
+- Add system tray on exit (restart required)
+- Add user data (where settings are stored, etc...)

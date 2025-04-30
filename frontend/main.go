@@ -2,9 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
-	"os"
-	"time"
 
 	"freenahiFront/internal/menu"
 	"freenahiFront/internal/settings"
@@ -12,64 +9,34 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/driver/desktop"
-	"fyne.io/fyne/v2/theme"
-	"github.com/rs/zerolog"
 )
 
 const (
-	appID              = "github.soragXYZ.freenahi"
-	appName            = "Freenahi"
-	preferenceLogLevel = "currentLogLevel"
+	appID   = "github.soragXYZ.freenahi"
+	appName = "Freenahi"
 )
-
-var logger = zerolog.New(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.DateTime}).With().Timestamp().Logger()
-
-// Set system tray if desktop (mini icon like wifi, shield, notifs, etc...)
-func makeTray(app fyne.App) {
-	if desk, isDesktop := app.(desktop.App); isDesktop {
-		h := fyne.NewMenuItem("Come back to Freenahi", func() {})
-		h.Icon = theme.HomeIcon()
-		h.Action = func() { log.Println("System tray menu tapped for Welcome") }
-		menu := fyne.NewMenu("SystemTrayMenu", h)
-		desk.SetSystemTrayMenu(menu)
-	}
-}
-
-// Watch events
-func logLifecycle(app fyne.App) {
-	app.Lifecycle().SetOnStarted(func() {
-		logger.Trace().Msg("Started application")
-	})
-	app.Lifecycle().SetOnStopped(func() {
-		logger.Trace().Msg("Stopped application")
-	})
-	app.Lifecycle().SetOnEnteredForeground(func() {
-		logger.Trace().Msg("Entered foreground")
-	})
-	app.Lifecycle().SetOnExitedForeground(func() {
-		logger.Trace().Msg("Exited foreground")
-	})
-}
 
 func main() {
 
 	fyneApp := app.NewWithID(appID)
 
 	// Set logs level
-	logLevel := fyneApp.Preferences().StringWithFallback(preferenceLogLevel, "info")
-	logger.Trace().Str("preference log level", logLevel).Msg("")
+	logLevel := fyneApp.Preferences().StringWithFallback(settings.PreferenceLogLevel, "info")
+	settings.SetLogLevel(logLevel, fyneApp)
 
-	settings.SetLogLevel(logLevel)
+	themeValue := fyneApp.Preferences().StringWithFallback(settings.PreferenceTheme, "light")
+	settings.SetTheme(themeValue, fyneApp)
 
-	logLifecycle(fyneApp)
-	makeTray(fyneApp)
+	settings.LogLifecycle(fyneApp)
+	settings.MakeTray(fyneApp)
 
 	w := fyneApp.NewWindow(appName)
+	w.SetFullScreen(settings.GetFullscreen(fyneApp))
+
 	w.SetMaster()
 	w.Resize(fyne.NewSize(800, 800))
 
-	w.SetMainMenu(menu.MakeTopMenu(fyneApp))
+	w.SetMainMenu(menu.MakeTopMenu(fyneApp, w))
 
 	content := container.NewStack()
 
@@ -80,12 +47,12 @@ func main() {
 
 	tutorial := container.NewBorder(nil, nil, nil, nil, content)
 
-	// Split
+	// Split between the navigation menu on the left and the content of the current window on the right
 	split := container.NewHSplit(menu.MakeNav(fyneApp, setTutorial, w), tutorial)
 	split.Offset = 0.2
 	w.SetContent(split)
 
-	// Exit cross on the window (with reduce and fullscreen)
+	// When clicking exit on the window (reduce, fullscreen and exit icons)
 	w.SetCloseIntercept(func() {
 		fmt.Println("Tried to quit")
 		fyneApp.Quit()
