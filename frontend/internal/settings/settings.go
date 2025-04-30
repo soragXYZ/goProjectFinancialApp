@@ -45,6 +45,9 @@ const (
 	FullscreenDefault    = false
 	PreferenceFullscreen = "currentFullscreen"
 
+	SystemTrayDefault    = false
+	PreferenceSystemTray = "currentSystemTray"
+
 	ThemeDefault    = "light"
 	PreferenceTheme = "currentTheme"
 )
@@ -425,13 +428,28 @@ func SetFullScreen(value bool, app fyne.App, topWin fyne.Window, currentWin fyne
 	logger.Info().Msgf("Fullscreen set to %s", strconv.FormatBool(value))
 }
 
+func SetSystemTray(value bool, app fyne.App) {
+	app.Preferences().SetBool(PreferenceSystemTray, value)
+	logger.Info().Msgf("System tray set to %s", strconv.FormatBool(value))
+}
+
 // Set system tray if desktop (mini icon like wifi, shield, notifs, etc...)
-func MakeTray(app fyne.App) {
+func MakeTray(app fyne.App, win fyne.Window) {
 	if desk, isDesktop := app.(desktop.App); isDesktop {
-		h := fyne.NewMenuItem("Come back to Freenahi", func() {})
-		h.Icon = theme.HomeIcon()
-		h.Action = func() { logger.Trace().Msg("System tray menu tapped for Welcome") }
-		menu := fyne.NewMenu("SystemTrayMenu", h)
+		comebackItem := fyne.NewMenuItem("Open app", func() {})
+		comebackItem.Icon = theme.HomeIcon()
+		comebackItem.Action = func() {
+			win.Show()
+			logger.Trace().Msg("Going back to main menu with system tray")
+		}
+		appName := app.Metadata().Name
+		titleItem := fyne.NewMenuItem(appName, nil)
+		titleItem.Disabled = true
+		menu := fyne.NewMenu("SystemTrayMenu",
+			titleItem,
+			fyne.NewMenuItemSeparator(),
+			comebackItem,
+		)
 		desk.SetSystemTrayMenu(menu)
 	}
 }

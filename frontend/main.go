@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	"freenahiFront/internal/menu"
 	"freenahiFront/internal/settings"
 
@@ -28,10 +26,10 @@ func main() {
 	settings.SetTheme(themeValue, fyneApp)
 
 	settings.LogLifecycle(fyneApp)
-	settings.MakeTray(fyneApp)
 
 	w := fyneApp.NewWindow(appName)
 	w.SetFullScreen(settings.GetFullscreen(fyneApp))
+	settings.MakeTray(fyneApp, w)
 
 	w.SetMaster()
 	w.Resize(fyne.NewSize(800, 800))
@@ -54,8 +52,12 @@ func main() {
 
 	// When clicking exit on the window (reduce, fullscreen and exit icons)
 	w.SetCloseIntercept(func() {
-		fmt.Println("Tried to quit")
-		fyneApp.Quit()
+		exitOnTray := fyneApp.Preferences().BoolWithFallback(settings.PreferenceSystemTray, settings.SystemTrayDefault)
+		if exitOnTray {
+			w.Hide()
+		} else {
+			fyneApp.Quit()
+		}
 	})
 
 	w.ShowAndRun()

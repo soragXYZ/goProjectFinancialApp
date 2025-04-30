@@ -13,5 +13,4 @@
 - Complete it
 
 * Frontend
-- Add system tray on exit (restart required)
 - Add user data (where settings are stored, etc...)

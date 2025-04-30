@@ -95,6 +95,16 @@ func MakeTopMenu(app fyne.App, topWindow fyne.Window) *fyne.MainMenu {
 				settings.SetFullScreen(v, app, topWindow, win)
 			},
 		)
+		closeButton := settings.NewSettingItemSwitch(
+			"Close button",
+			"App will minimize to system tray when closed.",
+			func() bool {
+				return app.Preferences().BoolWithFallback(settings.PreferenceSystemTray, settings.SystemTrayDefault)
+			},
+			func(v bool) {
+				settings.SetSystemTray(v, app)
+			},
+		)
 		logLevel := settings.NewSettingItemOptions(
 			"Log level",
 			"Set current log level",
@@ -145,6 +155,7 @@ func MakeTopMenu(app fyne.App, topWindow fyne.Window) *fyne.MainMenu {
 			fullscreen,
 			settings.NewSettingItemSeperator(),
 			settings.NewSettingItemHeading("Application"),
+			closeButton,
 			logLevel,
 			settings.NewSettingItemSeperator(),
 			settings.NewSettingItemHeading("Backend"),
@@ -159,6 +170,7 @@ func MakeTopMenu(app fyne.App, topWindow fyne.Window) *fyne.MainMenu {
 			Action: func() {
 				settings.SetTheme(settings.ThemeDefault, app)
 				settings.SetFullScreen(settings.FullscreenDefault, app, topWindow, win)
+				settings.SetSystemTray(settings.SystemTrayDefault, app)
 				settings.SetLogLevel(settings.LogLevelDefault, app)
 				settings.SetBackendIP(settings.BackendIPDefault, app)
 				settings.SetBackendPort(settings.BackendPortDefault, app)
