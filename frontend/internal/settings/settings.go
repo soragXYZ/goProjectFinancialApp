@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"time"
 
+	"freenahiFront/internal/github"
 	customTheme "freenahiFront/internal/theme"
 
 	"fyne.io/fyne/v2"
@@ -118,13 +119,6 @@ type SettingItem struct {
 
 	onSelected func(it SettingItem, refresh func()) // action called when selected
 	variant    settingVariant
-}
-
-// SettingList is a custom list widget for settings.
-type SettingList struct {
-	widget.List
-
-	SelectDelay time.Duration
 }
 
 func NewSettingItemOptions(
@@ -500,6 +494,53 @@ func ShowUserDataDialog(app fyne.App, win fyne.Window) {
 		form.Append(it.name, makePathEntry(app.Clipboard(), it.path))
 	}
 	d := dialog.NewCustom("User data", "Close", form, win)
+	d.Show()
+}
+
+func ShowAboutDialog(app fyne.App, win fyne.Window) {
+
+	currentVersion := app.Metadata().Version
+	remoteItem := widget.NewLabel("?")
+	remoteItem.Hide()
+	spinner := widget.NewActivity()
+	spinner.Start()
+
+	// Stop the spinner and replace it with the remote version when obtained
+	go func() {
+		// ToDo: store config of owner and repo somewhere else and create a release (evebuddy used for testing)
+		remoteVersion, isRemoteNewer, err := github.AvailableUpdate("ErikKalkoken", "evebuddy", currentVersion)
+		if err != nil {
+			logger.Error().Err(err).Msg("Cannot fetch github version")
+			remoteItem.Text = "Error"
+			remoteItem.Importance = widget.DangerImportance
+		} else {
+			remoteItem.Text = remoteVersion
+
+			if isRemoteNewer {
+				remoteItem.TextStyle.Bold = true
+			}
+		}
+
+		fyne.Do(func() {
+			remoteItem.Refresh()
+			spinner.Hide()
+			remoteItem.Show()
+		})
+
+	}()
+
+	currentVersionItem := widget.NewLabel(currentVersion)
+
+	content := container.New(
+		layout.NewCustomPaddedVBoxLayout(0),
+		container.New(
+			layout.NewCustomPaddedVBoxLayout(0),
+			container.NewHBox(widget.NewLabel("Latest version:"), layout.NewSpacer(), container.NewStack(spinner, remoteItem)),
+			container.NewHBox(widget.NewLabel("Current version:"), layout.NewSpacer(), currentVersionItem),
+		),
+	)
+
+	d := dialog.NewCustom("About", "Close", content, win)
 	d.Show()
 }
 
