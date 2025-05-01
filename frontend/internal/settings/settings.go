@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"maps"
 	"os"
+	"path/filepath"
 	"slices"
 	"strconv"
 	"time"
@@ -52,7 +53,20 @@ const (
 	PreferenceTheme = "currentTheme"
 )
 
-var logger = zerolog.New(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.DateTime}).With().Timestamp().Logger()
+var logger zerolog.Logger
+
+func InitLogger(app fyne.App) {
+	logFilePath := filepath.Join(app.Storage().RootURI().Path(), app.Metadata().Name+".log")
+	runLogFile, _ := os.OpenFile(
+		logFilePath,
+		os.O_APPEND|os.O_CREATE|os.O_WRONLY,
+		0664,
+	)
+	stdOut := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.DateTime}
+	multi := zerolog.MultiLevelWriter(stdOut, runLogFile)
+
+	logger = zerolog.New(multi).With().Timestamp().Logger()
+}
 
 var logLevelName2Level = map[string]zerolog.Level{
 	"trace": zerolog.TraceLevel,
@@ -468,4 +482,31 @@ func LogLifecycle(app fyne.App) {
 	app.Lifecycle().SetOnExitedForeground(func() {
 		logger.Trace().Msg("Exited foreground")
 	})
+}
+
+func ShowUserDataDialog(app fyne.App, win fyne.Window) {
+	type item struct {
+		name string
+		path string
+	}
+	items := make([]item, 0)
+	items = append(items, item{"Settings", filepath.Join(app.Storage().RootURI().Path(), "preferences.json")})
+	items = append(items, item{"Interface Settings", filepath.Join(filepath.Dir(app.Storage().RootURI().Path()), "settings.json")})
+	items = append(items, item{"Application logs", filepath.Join(app.Storage().RootURI().Path(), app.Metadata().Name+".log")})
+
+	form := widget.NewForm()
+
+	for _, it := range items {
+		form.Append(it.name, makePathEntry(app.Clipboard(), it.path))
+	}
+	d := dialog.NewCustom("User data", "Close", form, win)
+	d.Show()
+}
+
+func makePathEntry(cb fyne.Clipboard, path string) *fyne.Container {
+	cleanedPath := filepath.Clean(path)
+	return container.NewHBox(
+		widget.NewLabel(cleanedPath),
+		layout.NewSpacer(),
+		widget.NewButtonWithIcon("Copy", theme.ContentCopyIcon(), func() { cb.SetContent(cleanedPath) }))
 }

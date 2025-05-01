@@ -191,9 +191,14 @@ func MakeTopMenu(app fyne.App, topWindow fyne.Window) *fyne.MainMenu {
 		win.Show()
 	}
 
+	userDataEntry := settings.ShowUserDataDialog
+
 	helpMenu := fyne.NewMenu("Settings",
 		fyne.NewMenuItem("Interface Settings", uiFyneSettings),
 		fyne.NewMenuItem("General Settings", generalSettings),
+		fyne.NewMenuItem("User data", func() {
+			userDataEntry(app, topWindow)
+		}),
 		fyne.NewMenuItemSeparator(),
 		fyne.NewMenuItem("Documentation", func() {
 			u, _ := url.Parse("https://soragxyz.github.io/freenahi/")

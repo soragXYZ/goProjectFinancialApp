@@ -18,6 +18,8 @@ func main() {
 
 	fyneApp := app.NewWithID(appID)
 
+	settings.InitLogger(fyneApp)
+
 	// Set logs level
 	logLevel := fyneApp.Preferences().StringWithFallback(settings.PreferenceLogLevel, "info")
 	settings.SetLogLevel(logLevel, fyneApp)
@@ -28,6 +30,7 @@ func main() {
 	settings.LogLifecycle(fyneApp)
 
 	w := fyneApp.NewWindow(appName)
+	w.CenterOnScreen()
 	w.SetFullScreen(settings.GetFullscreen(fyneApp))
 	settings.MakeTray(fyneApp, w)
 
