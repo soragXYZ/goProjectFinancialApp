@@ -3,6 +3,7 @@ package main
 import (
 	"freenahiFront/internal/menu"
 	"freenahiFront/internal/settings"
+	"freenahiFront/internal/statusbar"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
@@ -51,7 +52,11 @@ func main() {
 	// Split between the navigation menu on the left and the content of the current window on the right
 	split := container.NewHSplit(menu.MakeNav(fyneApp, setTutorial, w), tutorial)
 	split.Offset = 0.2
-	w.SetContent(split)
+
+	statusBar := statusbar.NewStatusBar(fyneApp, w)
+
+	view := container.NewBorder(nil, statusBar, nil, nil, split)
+	w.SetContent(view)
 
 	// When clicking exit on the window (reduce, fullscreen and exit icons)
 	w.SetCloseIntercept(func() {
