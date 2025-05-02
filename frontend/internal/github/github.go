@@ -11,8 +11,6 @@ import (
 	"github.com/hashicorp/go-version"
 )
 
-// ToDo: Remove go-version dependency
-
 // AvailableUpdate return the version of the latest release and reports wether the update is newer.
 func AvailableUpdate(gitHubOwner, githubRepo, localVersion string) (string, bool, error) {
 	local, err := version.NewVersion(localVersion)

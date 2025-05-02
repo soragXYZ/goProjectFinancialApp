@@ -2,27 +2,19 @@ package settings
 
 import (
 	"fmt"
-	"maps"
-	"net/url"
-	"os"
-	"path/filepath"
-	"slices"
 	"strconv"
-	"time"
 
-	"freenahiFront/internal/github"
+	"freenahiFront/internal/helper"
 	customTheme "freenahiFront/internal/theme"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/data/validation"
 	"fyne.io/fyne/v2/dialog"
-	"fyne.io/fyne/v2/driver/desktop"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	kxwidget "github.com/ErikKalkoken/fyne-kx/widget"
-	"github.com/rs/zerolog"
 )
 
 type settingVariant uint
@@ -36,9 +28,6 @@ const (
 )
 
 const (
-	LogLevelDefault    = "info"
-	PreferenceLogLevel = "currentLogLevel"
-
 	BackendIPDefault    = "localhost"
 	PreferenceBackendIP = "currentBackendIP"
 
@@ -53,35 +42,7 @@ const (
 
 	ThemeDefault    = "light"
 	PreferenceTheme = "currentTheme"
-
-	docURL      = "https://soragxyz.github.io/freenahi/"
-	downloadURL = "https://github.com/soragXYZ/freenahi/releases"
 )
-
-var Logger zerolog.Logger
-
-func InitLogger(app fyne.App) {
-	logFilePath := filepath.Join(app.Storage().RootURI().Path(), app.Metadata().Name+".log")
-	runLogFile, _ := os.OpenFile(
-		logFilePath,
-		os.O_APPEND|os.O_CREATE|os.O_WRONLY,
-		0664,
-	)
-	stdOut := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.DateTime}
-	multi := zerolog.MultiLevelWriter(stdOut, runLogFile)
-
-	Logger = zerolog.New(multi).With().Timestamp().Logger()
-}
-
-var logLevelName2Level = map[string]zerolog.Level{
-	"trace": zerolog.TraceLevel,
-	"debug": zerolog.DebugLevel,
-	"info":  zerolog.InfoLevel,
-	"warn":  zerolog.WarnLevel,
-	"error": zerolog.ErrorLevel,
-	"fatal": zerolog.FatalLevel,
-	"panic": zerolog.PanicLevel,
-}
 
 type ContextMenuButton struct {
 	widget.Button
@@ -377,34 +338,6 @@ func MakeSettingsPage(title string, content fyne.CanvasObject, actions []Setting
 	)
 }
 
-func LogLevelNames() []string {
-	x := slices.Collect(maps.Keys(logLevelName2Level))
-	return x
-}
-
-func SetLogLevel(logLevel string, app fyne.App) {
-	switch logLevel {
-	case "trace":
-		zerolog.SetGlobalLevel(zerolog.TraceLevel)
-	case "debug":
-		zerolog.SetGlobalLevel(zerolog.DebugLevel)
-	case "info":
-		zerolog.SetGlobalLevel(zerolog.InfoLevel)
-	case "warn":
-		zerolog.SetGlobalLevel(zerolog.WarnLevel)
-	case "error":
-		zerolog.SetGlobalLevel(zerolog.ErrorLevel)
-	case "fatal":
-		zerolog.SetGlobalLevel(zerolog.FatalLevel)
-	case "panic":
-		zerolog.SetGlobalLevel(zerolog.PanicLevel)
-	default:
-		Logger.Fatal().Msgf("Unsupported value '%s' for log level. Should be trace, debug, info, warn, error, fatal or panic", logLevel)
-	}
-	app.Preferences().SetString(PreferenceLogLevel, logLevel)
-	Logger.Info().Msgf("Log level set to %s", logLevel)
-}
-
 func SetTheme(value string, app fyne.App) {
 	switch value {
 	case "light":
@@ -412,20 +345,20 @@ func SetTheme(value string, app fyne.App) {
 	case "dark":
 		app.Settings().SetTheme(&customTheme.ForcedVariant{Theme: theme.DefaultTheme(), Variant: theme.VariantDark})
 	default:
-		Logger.Fatal().Msgf("Unsupported value '%s' for theme. Should be light or dark", value)
+		helper.Logger.Fatal().Msgf("Unsupported value '%s' for theme. Should be light or dark", value)
 	}
 	app.Preferences().SetString(PreferenceTheme, value)
-	Logger.Info().Msgf("Theme set to %s", value)
+	helper.Logger.Info().Msgf("Theme set to %s", value)
 }
 
 func SetBackendIP(value string, app fyne.App) {
 	app.Preferences().SetString(PreferenceBackendIP, value)
-	Logger.Info().Msgf("Backend IP set to %s", value)
+	helper.Logger.Info().Msgf("Backend IP set to %s", value)
 }
 
 func SetBackendPort(value string, app fyne.App) {
 	app.Preferences().SetString(PreferenceBackendPort, value)
-	Logger.Info().Msgf("Backend port set to %s", value)
+	helper.Logger.Info().Msgf("Backend port set to %s", value)
 }
 
 // GetFullscreen returns the PreferenceFullscreen app preference value
@@ -437,137 +370,134 @@ func SetFullScreen(value bool, app fyne.App, topWin fyne.Window, currentWin fyne
 	app.Preferences().SetBool(PreferenceFullscreen, value)
 	topWin.SetFullScreen(app.Preferences().BoolWithFallback(PreferenceFullscreen, FullscreenDefault))
 	currentWin.Show()
-	Logger.Info().Msgf("Fullscreen set to %s", strconv.FormatBool(value))
+	helper.Logger.Info().Msgf("Fullscreen set to %s", strconv.FormatBool(value))
 }
 
 func SetSystemTray(value bool, app fyne.App) {
 	app.Preferences().SetBool(PreferenceSystemTray, value)
-	Logger.Info().Msgf("System tray set to %s", strconv.FormatBool(value))
+	helper.Logger.Info().Msgf("System tray set to %s", strconv.FormatBool(value))
 }
 
-// Set system tray if desktop (mini icon like wifi, shield, notifs, etc...)
-func MakeTray(app fyne.App, win fyne.Window) {
-	if desk, isDesktop := app.(desktop.App); isDesktop {
-		comebackItem := fyne.NewMenuItem("Open app", func() {})
-		comebackItem.Icon = theme.HomeIcon()
-		comebackItem.Action = func() {
-			win.Show()
-			Logger.Trace().Msg("Going back to main menu with system tray")
-		}
-		appName := app.Metadata().Name
-		titleItem := fyne.NewMenuItem(appName, nil)
-		titleItem.Disabled = true
-		menu := fyne.NewMenu("SystemTrayMenu",
-			titleItem,
-			fyne.NewMenuItemSeparator(),
-			comebackItem,
-		)
-		desk.SetSystemTrayMenu(menu)
-	}
-}
+func NewSettings(app fyne.App, topWindow fyne.Window) {
 
-// Watch events
-func LogLifecycle(app fyne.App) {
-	app.Lifecycle().SetOnStarted(func() {
-		Logger.Trace().Msg("Started application")
-	})
-	app.Lifecycle().SetOnStopped(func() {
-		Logger.Trace().Msg("Stopped application")
-	})
-	app.Lifecycle().SetOnEnteredForeground(func() {
-		Logger.Trace().Msg("Entered foreground")
-	})
-	app.Lifecycle().SetOnExitedForeground(func() {
-		Logger.Trace().Msg("Exited foreground")
-	})
-}
+	win := app.NewWindow("General Settings")
 
-func ShowUserDataDialog(app fyne.App, win fyne.Window) {
-	type item struct {
-		name string
-		path string
-	}
-	items := make([]item, 0)
-	items = append(items, item{"Settings", filepath.Join(app.Storage().RootURI().Path(), "preferences.json")})
-	items = append(items, item{"Interface Settings", filepath.Join(filepath.Dir(app.Storage().RootURI().Path()), "settings.json")})
-	items = append(items, item{"Application logs", filepath.Join(app.Storage().RootURI().Path(), app.Metadata().Name+".log")})
-
-	form := widget.NewForm()
-
-	for _, it := range items {
-		form.Append(it.name, makePathEntry(app.Clipboard(), it.path))
-	}
-	d := dialog.NewCustom("User data", "Close", form, win)
-	d.Show()
-}
-
-func ShowAboutDialog(app fyne.App, win fyne.Window) {
-
-	currentVersion := app.Metadata().Version
-	remoteItem := widget.NewLabel("?")
-	remoteItem.Hide()
-	spinner := widget.NewActivity()
-	spinner.Start()
-
-	// Stop the spinner and replace it with the remote version when obtained
-	go func() {
-		// ToDo: store config of owner and repo somewhere else and create a release (evebuddy used for testing)
-		remoteVersion, isRemoteNewer, err := github.AvailableUpdate("ErikKalkoken", "evebuddy", currentVersion)
-		if err != nil {
-			Logger.Error().Err(err).Msg("Cannot fetch github version")
-			remoteItem.Text = "Error"
-			remoteItem.Importance = widget.DangerImportance
-		} else {
-			remoteItem.Text = remoteVersion
-
-			if isRemoteNewer {
-				remoteItem.TextStyle.Bold = true
-			}
-		}
-
-		fyne.Do(func() {
-			remoteItem.Refresh()
-			spinner.Hide()
-			remoteItem.Show()
-		})
-
-	}()
-
-	currentVersionItem := widget.NewLabel(currentVersion)
-
-	doc, _ := url.Parse(docURL)
-	download, _ := url.Parse(downloadURL)
-
-	content := container.New(
-		layout.NewCustomPaddedVBoxLayout(0),
-		container.New(
-			layout.NewCustomPaddedVBoxLayout(0),
-			container.NewHBox(widget.NewLabel("Latest version:"), layout.NewSpacer(), container.NewStack(spinner, remoteItem)),
-			container.NewHBox(widget.NewLabel("Current version:"), layout.NewSpacer(), currentVersionItem),
-		),
-		container.NewHBox(
-			layout.NewSpacer(),
-			widget.NewHyperlink("Website", doc),
-			widget.NewHyperlink("Downloads", download),
-			layout.NewSpacer(),
-		),
-		widget.NewSeparator(),
-		container.NewHBox(
-			layout.NewSpacer(),
-			widget.NewLabel("Thanks for using this app!"),
-			layout.NewSpacer(),
-		),
+	theme := NewSettingItemOptions(
+		"Theme",
+		"Set theme color to dark or light",
+		[]string{"light", "dark"},
+		ThemeDefault,
+		func() string {
+			return app.Preferences().StringWithFallback(PreferenceTheme, ThemeDefault)
+		},
+		func(v string) {
+			SetTheme(v, app)
+		},
+		win,
+	)
+	fullscreen := NewSettingItemSwitch(
+		"Fullscreen",
+		"App will go fullscreen.",
+		func() bool {
+			return app.Preferences().BoolWithFallback(PreferenceFullscreen, FullscreenDefault)
+		},
+		func(v bool) {
+			SetFullScreen(v, app, topWindow, win)
+		},
+	)
+	closeButton := NewSettingItemSwitch(
+		"Close button",
+		"App will minimize to system tray when closed.",
+		func() bool {
+			return app.Preferences().BoolWithFallback(PreferenceSystemTray, SystemTrayDefault)
+		},
+		func(v bool) {
+			SetSystemTray(v, app)
+		},
+	)
+	logLevel := NewSettingItemOptions(
+		"Log level",
+		"Set current log level",
+		helper.LogLevelNames(),
+		helper.LogLevelDefault,
+		func() string {
+			return app.Preferences().StringWithFallback(helper.PreferenceLogLevel, helper.LogLevelDefault)
+		},
+		func(v string) {
+			helper.SetLogLevel(v, app)
+		},
+		win,
+	)
+	backendIP := NewSettingItemUserInput(
+		"Backend IP",
+		"Set the IP of the backend",
+		"Must be IPv4. Ex: 192.168.1.1",
+		`^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$|localhost$`, // IPv4 or localhost regex
+		"userEntry can only contain letters, numbers, '.', and ':'",
+		BackendIPDefault,
+		func() string {
+			return app.Preferences().StringWithFallback(PreferenceBackendIP, BackendIPDefault)
+		},
+		func(v string) {
+			SetBackendIP(v, app)
+		},
+		win,
+	)
+	backendPort := NewSettingItemUserInput(
+		"Backend Port",
+		"Set the port of the backend",
+		"Must be a port. Ex: 8080",
+		"^([1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$", // 0-65535 port regex
+		"userEntry can only contain letters, numbers, '.', and ':'",
+		BackendPortDefault,
+		func() string {
+			return app.Preferences().StringWithFallback(PreferenceBackendPort, BackendPortDefault)
+		},
+		func(v string) {
+			SetBackendPort(v, app)
+		},
+		win,
 	)
 
-	d := dialog.NewCustom("About", "Close", content, win)
-	d.Resize(fyne.NewSize(d.MinSize().Width*1.3, d.MinSize().Height))
-	d.Show()
-}
+	items := []SettingItem{
+		NewSettingItemHeading("Visual"),
+		theme,
+		fullscreen,
+		NewSettingItemSeperator(),
+		NewSettingItemHeading("Application"),
+		closeButton,
+		logLevel,
+		NewSettingItemSeperator(),
+		NewSettingItemHeading("Backend"),
+		backendIP,
+		backendPort,
+	}
 
-func makePathEntry(cb fyne.Clipboard, path string) *fyne.Container {
-	cleanedPath := filepath.Clean(path)
-	return container.NewHBox(
-		widget.NewLabel(cleanedPath),
-		layout.NewSpacer(),
-		widget.NewButtonWithIcon("Copy", theme.ContentCopyIcon(), func() { cb.SetContent(cleanedPath) }))
+	list := NewSettingList(items)
+
+	reset := SettingAction{
+		Label: "Reset to default",
+		Action: func() {
+			SetTheme(ThemeDefault, app)
+			SetFullScreen(FullscreenDefault, app, topWindow, win)
+			SetSystemTray(SystemTrayDefault, app)
+			helper.SetLogLevel(helper.LogLevelDefault, app)
+			SetBackendIP(BackendIPDefault, app)
+			SetBackendPort(BackendPortDefault, app)
+			list.Refresh()
+		},
+	}
+
+	actions := []SettingAction{reset}
+
+	tabs := container.NewAppTabs(
+		container.NewTabItem("General", MakeSettingsPage("General", list, actions)),
+		container.NewTabItem("Tab 1", widget.NewLabel("Hello")),
+	)
+
+	tabs.SetTabLocation(container.TabLocationLeading)
+	win.SetContent(tabs)
+	win.Resize(fyne.NewSize(800, 800))
+	win.Show()
+
 }

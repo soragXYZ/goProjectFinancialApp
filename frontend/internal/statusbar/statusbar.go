@@ -13,7 +13,7 @@ import (
 	"fyne.io/fyne/v2/widget"
 
 	"freenahiFront/internal/github"
-	"freenahiFront/internal/settings"
+	"freenahiFront/internal/helper"
 )
 
 const (
@@ -166,7 +166,7 @@ func (a *StatusBar) startGoroutines(app fyne.App, parentWin fyne.Window) {
 		remoteVersion, isRemoteNewer, err := github.AvailableUpdate("ErikKalkoken", "evebuddy", currentVersion)
 
 		if err != nil {
-			settings.Logger.Error().Err(err).Msg("Cannot fetch github version")
+			helper.Logger.Error().Err(err).Msg("Cannot fetch github version")
 		}
 
 		// If no update available, do nothing
@@ -188,7 +188,7 @@ func (a *StatusBar) startGoroutines(app fyne.App, parentWin fyne.Window) {
 				}
 				download, _ := url.Parse(downloadURL)
 				if err := app.OpenURL(download); err != nil {
-					settings.Logger.Error().Err(err).Msg("Cannot open the URL")
+					helper.Logger.Error().Err(err).Msg("Cannot open the URL")
 				}
 			}, parentWin,
 			)
