@@ -31,6 +31,10 @@ const (
 	BackendIPDefault    = "localhost"
 	PreferenceBackendIP = "currentBackendIP"
 
+	BackendProtocolDefault    = "http"
+	BackendProtocolSafe       = "https"
+	PreferenceBackendProtocol = "currentBackendProtocol"
+
 	BackendPortDefault    = "8080"
 	PreferenceBackendPort = "currentBackendPort"
 
@@ -378,6 +382,11 @@ func SetSystemTray(value bool, app fyne.App) {
 	helper.Logger.Info().Msgf("System tray set to %s", strconv.FormatBool(value))
 }
 
+func SetBackendProtocol(value string, app fyne.App) {
+	app.Preferences().SetString(PreferenceBackendProtocol, value)
+	helper.Logger.Info().Msgf("Backend protocol set to %s", value)
+}
+
 func NewSettings(app fyne.App, topWindow fyne.Window) {
 
 	win := app.NewWindow("General Settings")
@@ -443,6 +452,19 @@ func NewSettings(app fyne.App, topWindow fyne.Window) {
 		},
 		win,
 	)
+	backendProtocol := NewSettingItemOptions(
+		"Backend protocol",
+		"Protocol to use to reach the backend",
+		[]string{BackendProtocolDefault, BackendProtocolSafe},
+		BackendProtocolDefault,
+		func() string {
+			return app.Preferences().StringWithFallback(PreferenceBackendProtocol, BackendProtocolDefault)
+		},
+		func(v string) {
+			SetBackendProtocol(v, app)
+		},
+		win,
+	)
 	backendPort := NewSettingItemUserInput(
 		"Backend Port",
 		"Set the port of the backend",
@@ -470,6 +492,7 @@ func NewSettings(app fyne.App, topWindow fyne.Window) {
 		NewSettingItemSeperator(),
 		NewSettingItemHeading("Backend"),
 		backendIP,
+		backendProtocol,
 		backendPort,
 	}
 
@@ -483,6 +506,7 @@ func NewSettings(app fyne.App, topWindow fyne.Window) {
 			SetSystemTray(SystemTrayDefault, app)
 			helper.SetLogLevel(helper.LogLevelDefault, app)
 			SetBackendIP(BackendIPDefault, app)
+			SetBackendProtocol(BackendProtocolDefault, app)
 			SetBackendPort(BackendPortDefault, app)
 			list.Refresh()
 		},

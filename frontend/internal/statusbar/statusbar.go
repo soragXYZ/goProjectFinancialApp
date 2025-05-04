@@ -2,6 +2,9 @@ package statusbar
 
 import (
 	"fmt"
+	"io"
+	"net"
+	"net/http"
 	"net/url"
 	"time"
 
@@ -13,12 +16,16 @@ import (
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 
+	"github.com/hashicorp/go-version"
+
 	"freenahiFront/internal/github"
 	"freenahiFront/internal/helper"
+	"freenahiFront/internal/settings"
 )
 
 const (
-	downloadURL = "https://github.com/soragXYZ/freenahi/releases"
+	downloadURL                = "https://github.com/soragXYZ/freenahi/releases"
+	checkBackendStatusInterval = 5 * time.Second
 )
 
 type StatusBar struct {
@@ -33,13 +40,44 @@ func NewStatusBar(app fyne.App, parentWin fyne.Window) *StatusBar {
 		newVersionAvailable: container.NewHBox(),
 	}
 	statusBar.ExtendBaseWidget(statusBar)
-	statusBar.startGoroutines(app, parentWin)
 
-	statusBar.backendStatus = NewStatusBarItem(theme.NewErrorThemedResource(theme.MediaRecordIcon()), "Backend Status", func() {
-		fmt.Println("tesdst")
+	currentBackendVersionItem := widget.NewLabel("")
+	currentBackendVersionItem.Hide()
+	currentSpinner := widget.NewActivity()
+	currentSpinner.Start()
+
+	remoteBackendVersionItem := widget.NewLabel("")
+	remoteBackendVersionItem.Hide()
+	remoteSpinner := widget.NewActivity()
+	remoteSpinner.Start()
+
+	statusBar.startGoroutines(app, parentWin, remoteBackendVersionItem, currentBackendVersionItem, remoteSpinner, currentSpinner)
+
+	statusBar.backendStatus = NewStatusBarItem(theme.NewWarningThemedResource(theme.MediaRecordIcon()), "Contacting backend...", func() {
+		statusBar.showBackendDialog(parentWin, remoteBackendVersionItem, currentBackendVersionItem, remoteSpinner, currentSpinner)
 	})
 
 	return statusBar
+}
+
+func (a *StatusBar) showBackendDialog(parentWin fyne.Window, remoteBackendVersionItem, currentBackendVersionItem *widget.Label, remoteSpinner, currentSpinner *widget.Activity) {
+
+	content := container.New(
+		layout.NewCustomPaddedVBoxLayout(0),
+		container.New(
+			layout.NewCustomPaddedVBoxLayout(0),
+			container.NewHBox(widget.NewLabel("Latest version:"), layout.NewSpacer(), container.NewStack(remoteSpinner, remoteBackendVersionItem)),
+			container.NewHBox(widget.NewLabel("Current version:"), layout.NewSpacer(), container.NewStack(currentSpinner, currentBackendVersionItem)),
+		),
+		container.NewHBox(
+			layout.NewSpacer(),
+			layout.NewSpacer(),
+		),
+	)
+
+	d := dialog.NewCustom("Backend version", "Close", content, parentWin)
+	d.Resize(fyne.NewSize(d.MinSize().Width*1.3, d.MinSize().Height))
+	d.Show()
 }
 
 func (a *StatusBar) CreateRenderer() fyne.WidgetRenderer {
@@ -117,16 +155,93 @@ func (w *StatusBarItem) CreateRenderer() fyne.WidgetRenderer {
 }
 
 // Start asynchronous jobs: check if an update is available, if the backend is reachable, etc...
-func (a *StatusBar) startGoroutines(app fyne.App, parentWin fyne.Window) {
+func (a *StatusBar) startGoroutines(app fyne.App, parentWin fyne.Window, remoteBackendVersionItem, currentBackendVersionItem *widget.Label, remoteSpinner, currentSpiner *widget.Activity) {
 
 	go a.showUpdateAvailable(app, parentWin)
-	go a.showBackendStatus()
-}
 
-func (a *StatusBar) showBackendStatus() {
-	time.Sleep(1 * time.Second)
-	// a.backendStatus.label.SetText("Upated")
-	a.backendStatus.icon.SetResource(theme.NewSuccessThemedResource(theme.MediaRecordIcon()))
+	// Check the backend status every xxx seconds
+	go func() {
+		for {
+			backendIp := app.Preferences().StringWithFallback(settings.PreferenceBackendIP, settings.BackendIPDefault)
+			backendProtocol := app.Preferences().StringWithFallback(settings.PreferenceBackendProtocol, settings.BackendProtocolDefault)
+			backendPort := app.Preferences().StringWithFallback(settings.PreferenceBackendPort, settings.BackendPortDefault)
+
+			var statusBarText string
+			statusBarSuccessIcon := theme.NewSuccessThemedResource(theme.MediaRecordIcon())
+			statusBarWarnIcon := theme.NewWarningThemedResource(theme.MediaRecordIcon())
+			statusBarErrorIcon := theme.NewErrorThemedResource(theme.MediaRecordIcon())
+
+			// Get remote backend version
+			// ToDo: get the actual version of the backend when the image is finalized
+			remoteBackendVersion, err := version.NewVersion("0.0.2")
+			if err != nil {
+				helper.Logger.Error().Err(err).Msg("Version error")
+			}
+
+			helper.Logger.Trace().Str("Remote backend version", remoteBackendVersion.String()).Msg("")
+			remoteBackendVersionItem.Text = remoteBackendVersion.String()
+
+			// Get current backend version
+			url := fmt.Sprintf("%s://%s:%s/version/", backendProtocol, backendIp, backendPort)
+			resp, err := http.Get(url)
+
+			if e, ok := err.(net.Error); ok && e.Timeout() { // Backend unreachable
+				helper.Logger.Error().Err(err).Msg("Timeout")
+				statusBarText = "Backend unreachable"
+				fyne.Do(func() { a.backendStatus.icon.SetResource(statusBarErrorIcon) })
+
+			} else if err != nil { // Backend Error
+				helper.Logger.Error().Err(err).Msg("Cannot run http get request")
+				statusBarText = "Backend Error"
+				fyne.Do(func() { a.backendStatus.icon.SetResource(statusBarErrorIcon) })
+
+			} else { // Reachable
+
+				body, err := io.ReadAll(resp.Body)
+				if err != nil {
+					helper.Logger.Error().Err(err).Msg("ReadAll error")
+				}
+
+				currentBackendVersion, err := version.NewVersion(string(body))
+				if err != nil {
+					helper.Logger.Error().Err(err).Msg("Version error")
+				}
+
+				helper.Logger.Trace().Str("current backend version", currentBackendVersion.String()).Msg("")
+				currentBackendVersionItem.Text = currentBackendVersion.String()
+
+				if currentBackendVersion.LessThan(remoteBackendVersion) {
+					statusBarText = "Backend update available"
+					fyne.Do(func() { a.backendStatus.icon.SetResource(statusBarWarnIcon) })
+				} else {
+					statusBarText = "Backend OK"
+					fyne.Do(func() { a.backendStatus.icon.SetResource(statusBarSuccessIcon) })
+				}
+			}
+
+			if len(remoteBackendVersionItem.Text) != 0 {
+				fyne.Do(func() {
+					remoteBackendVersionItem.Refresh()
+					remoteSpinner.Hide()
+					remoteBackendVersionItem.Show()
+				})
+			}
+
+			if len(currentBackendVersionItem.Text) != 0 {
+				fyne.Do(func() {
+					currentBackendVersionItem.Refresh()
+					currentSpiner.Hide()
+					currentBackendVersionItem.Show()
+				})
+			}
+
+			fyne.Do(func() { a.backendStatus.label.SetText(statusBarText) })
+
+			time.Sleep(checkBackendStatusInterval)
+
+		}
+
+	}()
 
 }
 
@@ -144,7 +259,7 @@ func (a *StatusBar) showUpdateAvailable(app fyne.App, parentWin fyne.Window) {
 	}
 
 	// If an update is available, create a clickable hyperlink and display versions
-	hyperlink := widget.NewHyperlink("Update available", nil)
+	hyperlink := widget.NewHyperlink("Application update available", nil)
 	hyperlink.OnTapped = func() {
 		c := container.NewVBox(
 			container.NewHBox(widget.NewLabel("Latest version:"), layout.NewSpacer(), widget.NewLabel(remoteVersion)),
@@ -163,7 +278,10 @@ func (a *StatusBar) showUpdateAvailable(app fyne.App, parentWin fyne.Window) {
 		)
 		d.Show()
 	}
-	a.newVersionAvailable.Add(widget.NewSeparator())
-	a.newVersionAvailable.Add(widget.NewIcon(theme.DownloadIcon()))
-	a.newVersionAvailable.Add(hyperlink)
+	fyne.Do(func() {
+		a.newVersionAvailable.Add(widget.NewSeparator())
+		a.newVersionAvailable.Add(widget.NewIcon(theme.DownloadIcon()))
+		a.newVersionAvailable.Add(hyperlink)
+	})
+
 }

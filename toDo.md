@@ -13,4 +13,4 @@
 - Complete it
 
 * Frontend
-- Add user data (where settings are stored, etc...)
+- Add text for serverStatus
