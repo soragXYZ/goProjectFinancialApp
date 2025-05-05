@@ -13,4 +13,5 @@
 - Complete it
 
 * Frontend
-- Add text for serverStatus
+- Add slider setting option for backend status polling interval
+- Language option
