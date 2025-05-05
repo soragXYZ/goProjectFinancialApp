@@ -5,10 +5,12 @@ import (
 	"freenahiFront/internal/menu"
 	"freenahiFront/internal/settings"
 	"freenahiFront/internal/statusbar"
+	"freenahiFront/resources"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/lang"
 )
 
 const (
@@ -26,7 +28,23 @@ func main() {
 	logLevel := fyneApp.Preferences().StringWithFallback(helper.PreferenceLogLevel, "info")
 	helper.SetLogLevel(logLevel, fyneApp)
 
-	themeValue := fyneApp.Preferences().StringWithFallback(settings.PreferenceTheme, "light")
+	// Set the language
+	// This part should be moved in SetLanguage func if it is possible to change the lang without a restart
+	languageIndex := resources.GetLanguageIndex(fyneApp)
+
+	translation := resources.TranslationsInfo[languageIndex]
+	translationResource, err := resources.Translations.ReadFile("translations/" + translation.Name + ".json")
+	if err != nil {
+		helper.Logger.Fatal().Msgf("Error loading translation file: %s", err.Error())
+	}
+
+	// "trick" Fyne into loading translations for configured language
+	// by pretending it's the translation for the system locale
+	name := lang.SystemLocale().LanguageString()
+	lang.AddTranslations(fyne.NewStaticResource(name+".json", translationResource))
+	helper.Logger.Info().Msgf("Language set to %s", translation.DisplayName)
+
+	themeValue := fyneApp.Preferences().StringWithFallback(settings.PreferenceTheme, settings.ThemeDefault)
 	settings.SetTheme(themeValue, fyneApp)
 
 	helper.LogLifecycle(fyneApp)

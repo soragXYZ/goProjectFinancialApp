@@ -6,11 +6,13 @@ import (
 
 	"freenahiFront/internal/helper"
 	customTheme "freenahiFront/internal/theme"
+	"freenahiFront/resources"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/data/validation"
 	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/lang"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
@@ -490,6 +492,19 @@ func NewSettings(app fyne.App, topWindow fyne.Window) {
 		},
 		win,
 	)
+	language := NewSettingItemOptions(
+		lang.L("Language"),
+		lang.L("Language option"),
+		resources.GetTranslationNames(),
+		resources.LanguageDefault,
+		func() string {
+			return app.Preferences().StringWithFallback(resources.PreferenceLanguage, resources.LanguageDefault)
+		},
+		func(v string) {
+			resources.SetLanguage(v, app)
+		},
+		win,
+	)
 	backendIP := NewSettingItemUserInput(
 		"Backend IP",
 		"Set the IP of the backend",
@@ -557,6 +572,7 @@ func NewSettings(app fyne.App, topWindow fyne.Window) {
 		NewSettingItemHeading("Application"),
 		closeButton,
 		logLevel,
+		language,
 		NewSettingItemSeperator(),
 		NewSettingItemHeading("Backend"),
 		backendIP,
@@ -578,6 +594,7 @@ func NewSettings(app fyne.App, topWindow fyne.Window) {
 			SetBackendProtocol(BackendProtocolDefault, app)
 			SetBackendPort(BackendPortDefault, app)
 			SetBackendPollingInterval(BackendPollingIntervalDefault, app)
+			resources.SetLanguage(resources.LanguageDefault, app)
 			list.Refresh()
 		},
 	}
