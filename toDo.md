@@ -13,5 +13,5 @@
 - Complete it
 
 * Frontend
-- Translate every word and isolate backend options in a new tab
+- Translate every word
 - Remove kx-widget dependency

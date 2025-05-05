@@ -72,7 +72,11 @@ func NewContextMenuButtonWithIcon(icon fyne.Resource, label string, menu *fyne.M
 
 // Open a menu when the button is clicked
 func (b *ContextMenuButton) Tapped(e *fyne.PointEvent) {
-	widget.ShowPopUpMenuAtPosition(b.menu, fyne.CurrentApp().Driver().CanvasForObject(b), e.AbsolutePosition)
+	widget.ShowPopUpMenuAtPosition(
+		b.menu,
+		fyne.CurrentApp().Driver().CanvasForObject(b),
+		e.AbsolutePosition,
+	)
 }
 
 // SetMenuItems replaces the menu items.
@@ -294,8 +298,16 @@ func NewSettingList(items []SettingItem) *widget.List {
 			nil,
 			container.New(layout.NewCustomPaddedLayout(0, 0, 0, 0), widget.NewSeparator()),
 			nil,
-			container.NewVBox(layout.NewSpacer(), container.NewStack(kxwidget.NewSwitch(nil), widget.NewLabel("")), layout.NewSpacer()),
-			container.New(layout.NewCustomPaddedVBoxLayout(0), layout.NewSpacer(), label, hint, layout.NewSpacer()),
+			container.NewVBox(
+				layout.NewSpacer(),
+				container.NewStack(kxwidget.NewSwitch(nil), widget.NewLabel("")),
+				layout.NewSpacer(),
+			),
+			container.New(
+				layout.NewCustomPaddedVBoxLayout(0),
+				layout.NewSpacer(),
+				label, hint, layout.NewSpacer(),
+			),
 		))
 		return c
 	}
@@ -446,6 +458,8 @@ func NewSettings(app fyne.App, topWindow fyne.Window) {
 
 	win := app.NewWindow("General Settings")
 
+	///////////////////////////////////////////////////////////////////////////
+	// General Tab
 	theme := NewSettingItemOptions(
 		"Theme",
 		"Set theme color to dark or light",
@@ -505,6 +519,36 @@ func NewSettings(app fyne.App, topWindow fyne.Window) {
 		},
 		win,
 	)
+
+	generalItems := []SettingItem{
+		NewSettingItemHeading("Visual"),
+		theme,
+		fullscreen,
+		NewSettingItemSeperator(),
+		NewSettingItemHeading("Application"),
+		closeButton,
+		logLevel,
+		language,
+	}
+
+	generalSettingsList := NewSettingList(generalItems)
+
+	generalReset := SettingAction{
+		Label: "Reset to default",
+		Action: func() {
+			SetTheme(ThemeDefault, app)
+			SetFullScreen(FullscreenDefault, app, topWindow, win)
+			SetSystemTray(SystemTrayDefault, app)
+			helper.SetLogLevel(helper.LogLevelDefault, app)
+			resources.SetLanguage(resources.LanguageDefault, app)
+			generalSettingsList.Refresh()
+		},
+	}
+
+	generalActionsList := []SettingAction{generalReset}
+
+	///////////////////////////////////////////////////////////////////////////
+	// Backend Tab
 	backendIP := NewSettingItemUserInput(
 		"Backend IP",
 		"Set the IP of the backend",
@@ -564,51 +608,36 @@ func NewSettings(app fyne.App, topWindow fyne.Window) {
 		win,
 	)
 
-	items := []SettingItem{
-		NewSettingItemHeading("Visual"),
-		theme,
-		fullscreen,
-		NewSettingItemSeperator(),
-		NewSettingItemHeading("Application"),
-		closeButton,
-		logLevel,
-		language,
-		NewSettingItemSeperator(),
-		NewSettingItemHeading("Backend"),
+	backendItems := []SettingItem{
 		backendIP,
 		backendProtocol,
 		backendPort,
 		backendPollingInterval,
 	}
 
-	list := NewSettingList(items)
+	backendSettingsList := NewSettingList(backendItems)
 
-	reset := SettingAction{
+	backendReset := SettingAction{
 		Label: "Reset to default",
 		Action: func() {
-			SetTheme(ThemeDefault, app)
-			SetFullScreen(FullscreenDefault, app, topWindow, win)
-			SetSystemTray(SystemTrayDefault, app)
-			helper.SetLogLevel(helper.LogLevelDefault, app)
 			SetBackendIP(BackendIPDefault, app)
 			SetBackendProtocol(BackendProtocolDefault, app)
 			SetBackendPort(BackendPortDefault, app)
 			SetBackendPollingInterval(BackendPollingIntervalDefault, app)
-			resources.SetLanguage(resources.LanguageDefault, app)
-			list.Refresh()
+			backendSettingsList.Refresh()
 		},
 	}
 
-	actions := []SettingAction{reset}
+	backendActionsList := []SettingAction{backendReset}
 
 	tabs := container.NewAppTabs(
-		container.NewTabItem("General", MakeSettingsPage("General", list, actions)),
-		container.NewTabItem("Tab 1", widget.NewLabel("Hello")),
+		container.NewTabItem("General", MakeSettingsPage("General", generalSettingsList, generalActionsList)),
+		container.NewTabItem("Backend", MakeSettingsPage("Backend", backendSettingsList, backendActionsList)),
 	)
 
 	tabs.SetTabLocation(container.TabLocationLeading)
 	win.SetContent(tabs)
-	win.Resize(fyne.NewSize(800, 800))
+	win.Resize(fyne.NewSize(750, 600))
+	win.CenterOnScreen()
 	win.Show()
-
 }
