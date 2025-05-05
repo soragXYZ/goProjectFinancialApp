@@ -24,8 +24,7 @@ import (
 )
 
 const (
-	downloadURL                = "https://github.com/soragXYZ/freenahi/releases"
-	checkBackendStatusInterval = 10 * time.Second
+	downloadURL = "https://github.com/soragXYZ/freenahi/releases"
 )
 
 // StatusBar struct, containing info for the application and the backend
@@ -228,7 +227,7 @@ func (a *StatusBar) showApplicationUpdateInStatusBar(app fyne.App, parentWin fyn
 
 }
 
-// Check the backend status at regular time interval, every checkBackendStatusInterval seconds
+// Check the backend status at regular time interval, every xxx seconds
 func (a *StatusBar) showBackendInStatusBar(app fyne.App, backendInfo *backendInfo) {
 
 	var statusBarText string
@@ -339,7 +338,8 @@ func (a *StatusBar) showBackendInStatusBar(app fyne.App, backendInfo *backendInf
 
 		fyne.Do(func() { a.backendStatus.label.SetText(statusBarText) })
 
-		time.Sleep(checkBackendStatusInterval)
+		secondsToWait := app.Preferences().IntWithFallback(settings.PreferenceBackendPollingInterval, settings.BackendPollingIntervalDefault)
+		time.Sleep(time.Duration(secondsToWait) * time.Second)
 
 	}
 }

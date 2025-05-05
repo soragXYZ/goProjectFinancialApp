@@ -38,6 +38,11 @@ const (
 	BackendPortDefault    = "8080"
 	PreferenceBackendPort = "currentBackendPort"
 
+	BackendPollingIntervalDefault    = 10 // time in seconds
+	BackendPollingIntervalMin        = 1
+	BackendPollingIntervalMax        = 120
+	PreferenceBackendPollingInterval = "currentBackendPollingInterval"
+
 	FullscreenDefault    = false
 	PreferenceFullscreen = "currentFullscreen"
 
@@ -229,6 +234,49 @@ func NewSettingItemSwitch(
 	}
 }
 
+func NewSettingItemSlider(
+	label, hint string,
+	minV, maxV, defaultV float64,
+	getter func() float64,
+	setter func(v float64),
+	win fyne.Window,
+) SettingItem {
+	return SettingItem{
+		Label: label,
+		Hint:  hint,
+		Getter: func() any {
+			return getter()
+		},
+		Setter: func(v any) {
+			switch x := v.(type) {
+			case float64:
+				setter(x)
+			case int:
+				setter(float64(x))
+			default:
+				panic("setting item: unsurported type: " + label)
+			}
+		},
+		onSelected: func(it SettingItem, refresh func()) {
+			sl := kxwidget.NewSlider(minV, maxV)
+			sl.SetValue(float64(getter()))
+			sl.OnChangeEnded = setter
+			d := makeSettingDialog(
+				sl,
+				it.Label,
+				it.Hint,
+				func() {
+					sl.SetValue(defaultV)
+				},
+				refresh,
+				win,
+			)
+			d.Show()
+		},
+		variant: settingText,
+	}
+}
+
 // NewSettingList returns a new SettingList widget.
 func NewSettingList(items []SettingItem) *widget.List {
 	w := &widget.List{}
@@ -365,6 +413,11 @@ func SetBackendPort(value string, app fyne.App) {
 	helper.Logger.Info().Msgf("Backend port set to %s", value)
 }
 
+func SetBackendPollingInterval(value int, app fyne.App) {
+	app.Preferences().SetInt(PreferenceBackendPollingInterval, value)
+	helper.Logger.Info().Msgf("Backend polling interval set to %d", value)
+}
+
 // GetFullscreen returns the PreferenceFullscreen app preference value
 func GetFullscreen(app fyne.App) bool {
 	return app.Preferences().BoolWithFallback(PreferenceFullscreen, FullscreenDefault)
@@ -481,6 +534,21 @@ func NewSettings(app fyne.App, topWindow fyne.Window) {
 		win,
 	)
 
+	backendPollingInterval := NewSettingItemSlider(
+		"Backend polling interval",
+		"Time in seconds between 2 calls to the backend. Used to check the status of the backend",
+		float64(BackendPollingIntervalMin),
+		float64(BackendPollingIntervalMax),
+		float64(BackendPollingIntervalDefault),
+		func() float64 {
+			return float64(app.Preferences().IntWithFallback(PreferenceBackendPollingInterval, BackendPollingIntervalDefault))
+		},
+		func(v float64) {
+			SetBackendPollingInterval(int(v), app)
+		},
+		win,
+	)
+
 	items := []SettingItem{
 		NewSettingItemHeading("Visual"),
 		theme,
@@ -494,6 +562,7 @@ func NewSettings(app fyne.App, topWindow fyne.Window) {
 		backendIP,
 		backendProtocol,
 		backendPort,
+		backendPollingInterval,
 	}
 
 	list := NewSettingList(items)
@@ -508,6 +577,7 @@ func NewSettings(app fyne.App, topWindow fyne.Window) {
 			SetBackendIP(BackendIPDefault, app)
 			SetBackendProtocol(BackendProtocolDefault, app)
 			SetBackendPort(BackendPortDefault, app)
+			SetBackendPollingInterval(BackendPollingIntervalDefault, app)
 			list.Refresh()
 		},
 	}

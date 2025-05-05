@@ -13,5 +13,5 @@
 - Complete it
 
 * Frontend
-- Add slider setting option for backend status polling interval
 - Language option
+- Remove kx-widget dependency
