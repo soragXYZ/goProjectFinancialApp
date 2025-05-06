@@ -13,5 +13,6 @@
 - Complete it
 
 * Frontend
-- Translate every word
-- Remove kx-widget dependency
+- Add a tutorial to create the backend and Powens account
+- Translate dialog options too
+- Remove kx-widget dependency ?

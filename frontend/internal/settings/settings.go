@@ -145,11 +145,11 @@ func makeSettingDialog(
 ) dialog.Dialog {
 	var d dialog.Dialog
 	buttons := container.NewHBox(
-		widget.NewButton("Close", func() {
+		widget.NewButton(lang.L("Close"), func() {
 			d.Hide()
 		}),
 		layout.NewSpacer(),
-		widget.NewButton("Reset", func() {
+		widget.NewButton(lang.L("Reset"), func() {
 			reset()
 		}),
 	)
@@ -203,7 +203,7 @@ func NewSettingItemUserInput(
 			}
 
 			_, s := win.Canvas().InteractiveArea()
-			d := dialog.NewForm(label, "Save", "Cancel", items, func(b bool) {
+			d := dialog.NewForm(label, lang.L("Save"), lang.L("Cancel"), items, func(b bool) {
 				if !b {
 					return
 				}
@@ -260,7 +260,7 @@ func NewSettingItemSlider(
 			case int:
 				setter(float64(x))
 			default:
-				panic("setting item: unsurported type: " + label)
+				helper.Logger.Fatal().Msg("setting item: unsupported type")
 			}
 		},
 		onSelected: func(it SettingItem, refresh func()) {
@@ -290,7 +290,7 @@ func NewSettingList(items []SettingItem) *widget.List {
 		return len(items)
 	}
 	w.CreateItem = func() fyne.CanvasObject {
-		label := widget.NewLabel("Template")
+		label := widget.NewLabel("")
 		label.Truncation = fyne.TextTruncateClip
 		hint := widget.NewLabel("")
 		hint.Truncation = fyne.TextTruncateClip
@@ -394,7 +394,7 @@ func MakeSettingsPage(title string, content fyne.CanvasObject, actions []Setting
 	for _, action := range actions {
 		items = append(items, fyne.NewMenuItem(action.Label, action.Action))
 	}
-	options := NewContextMenuButtonWithIcon(theme.MoreHorizontalIcon(), "More", fyne.NewMenu("", items...))
+	options := NewContextMenuButtonWithIcon(theme.MoreHorizontalIcon(), lang.L("More"), fyne.NewMenu("", items...))
 	return container.NewBorder(
 		container.NewVBox(container.NewHBox(t, layout.NewSpacer(), options), widget.NewSeparator()),
 		nil,
@@ -456,13 +456,13 @@ func SetBackendProtocol(value string, app fyne.App) {
 
 func NewSettings(app fyne.App, topWindow fyne.Window) {
 
-	win := app.NewWindow("General Settings")
+	win := app.NewWindow(lang.L("General Settings"))
 
 	///////////////////////////////////////////////////////////////////////////
 	// General Tab
 	theme := NewSettingItemOptions(
-		"Theme",
-		"Set theme color to dark or light",
+		lang.L("Theme"),
+		lang.L("Theme details"),
 		[]string{"light", "dark"},
 		ThemeDefault,
 		func() string {
@@ -474,8 +474,8 @@ func NewSettings(app fyne.App, topWindow fyne.Window) {
 		win,
 	)
 	fullscreen := NewSettingItemSwitch(
-		"Fullscreen",
-		"App will go fullscreen.",
+		lang.L("Fullscreen"),
+		lang.L("Fullscreen details"),
 		func() bool {
 			return app.Preferences().BoolWithFallback(PreferenceFullscreen, FullscreenDefault)
 		},
@@ -484,8 +484,8 @@ func NewSettings(app fyne.App, topWindow fyne.Window) {
 		},
 	)
 	closeButton := NewSettingItemSwitch(
-		"Close button",
-		"App will minimize to system tray when closed.",
+		lang.L("Close button"),
+		lang.L("Close button details"),
 		func() bool {
 			return app.Preferences().BoolWithFallback(PreferenceSystemTray, SystemTrayDefault)
 		},
@@ -494,8 +494,8 @@ func NewSettings(app fyne.App, topWindow fyne.Window) {
 		},
 	)
 	logLevel := NewSettingItemOptions(
-		"Log level",
-		"Set current log level",
+		lang.L("Log level"),
+		lang.L("Log level details"),
 		helper.LogLevelNames(),
 		helper.LogLevelDefault,
 		func() string {
@@ -521,11 +521,11 @@ func NewSettings(app fyne.App, topWindow fyne.Window) {
 	)
 
 	generalItems := []SettingItem{
-		NewSettingItemHeading("Visual"),
+		NewSettingItemHeading(lang.L("Interface")),
 		theme,
 		fullscreen,
 		NewSettingItemSeperator(),
-		NewSettingItemHeading("Application"),
+		NewSettingItemHeading(lang.L("Application")),
 		closeButton,
 		logLevel,
 		language,
@@ -534,7 +534,7 @@ func NewSettings(app fyne.App, topWindow fyne.Window) {
 	generalSettingsList := NewSettingList(generalItems)
 
 	generalReset := SettingAction{
-		Label: "Reset to default",
+		Label: lang.L("Reset to default values"),
 		Action: func() {
 			SetTheme(ThemeDefault, app)
 			SetFullScreen(FullscreenDefault, app, topWindow, win)
@@ -550,9 +550,9 @@ func NewSettings(app fyne.App, topWindow fyne.Window) {
 	///////////////////////////////////////////////////////////////////////////
 	// Backend Tab
 	backendIP := NewSettingItemUserInput(
-		"Backend IP",
-		"Set the IP of the backend",
-		"Must be IPv4. Ex: 192.168.1.1",
+		lang.L("Backend IP"),
+		lang.L("Backend IP details"),
+		lang.L("Backend IP placeholder"),
 		`^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$|localhost$`, // IPv4 or localhost regex
 		"userEntry can only contain letters, numbers, '.', and ':'",
 		BackendIPDefault,
@@ -565,8 +565,8 @@ func NewSettings(app fyne.App, topWindow fyne.Window) {
 		win,
 	)
 	backendProtocol := NewSettingItemOptions(
-		"Backend protocol",
-		"Protocol to use to reach the backend",
+		lang.L("Backend protocol"),
+		lang.L("Backend protocol details"),
 		[]string{BackendProtocolDefault, BackendProtocolSafe},
 		BackendProtocolDefault,
 		func() string {
@@ -578,9 +578,9 @@ func NewSettings(app fyne.App, topWindow fyne.Window) {
 		win,
 	)
 	backendPort := NewSettingItemUserInput(
-		"Backend Port",
-		"Set the port of the backend",
-		"Must be a port. Ex: 8080",
+		lang.L("Backend Port"),
+		lang.L("Backend Port details"),
+		lang.L("Backend Port placeholder"),
 		"^([1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$", // 0-65535 port regex
 		"userEntry can only contain letters, numbers, '.', and ':'",
 		BackendPortDefault,
@@ -594,8 +594,8 @@ func NewSettings(app fyne.App, topWindow fyne.Window) {
 	)
 
 	backendPollingInterval := NewSettingItemSlider(
-		"Backend polling interval",
-		"Time in seconds between 2 calls to the backend. Used to check the status of the backend",
+		lang.L("Backend polling"),
+		lang.L("Backend polling details"),
 		float64(BackendPollingIntervalMin),
 		float64(BackendPollingIntervalMax),
 		float64(BackendPollingIntervalDefault),
@@ -618,7 +618,7 @@ func NewSettings(app fyne.App, topWindow fyne.Window) {
 	backendSettingsList := NewSettingList(backendItems)
 
 	backendReset := SettingAction{
-		Label: "Reset to default",
+		Label: lang.L("Reset to default values"),
 		Action: func() {
 			SetBackendIP(BackendIPDefault, app)
 			SetBackendProtocol(BackendProtocolDefault, app)
@@ -631,8 +631,8 @@ func NewSettings(app fyne.App, topWindow fyne.Window) {
 	backendActionsList := []SettingAction{backendReset}
 
 	tabs := container.NewAppTabs(
-		container.NewTabItem("General", MakeSettingsPage("General", generalSettingsList, generalActionsList)),
-		container.NewTabItem("Backend", MakeSettingsPage("Backend", backendSettingsList, backendActionsList)),
+		container.NewTabItem(lang.L("General"), MakeSettingsPage(lang.L("General"), generalSettingsList, generalActionsList)),
+		container.NewTabItem(lang.L("Backend"), MakeSettingsPage(lang.L("Backend"), backendSettingsList, backendActionsList)),
 	)
 
 	tabs.SetTabLocation(container.TabLocationLeading)

@@ -9,6 +9,7 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/lang"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
@@ -60,24 +61,24 @@ func ShowAboutDialog(app fyne.App, win fyne.Window) {
 		layout.NewCustomPaddedVBoxLayout(0),
 		container.New(
 			layout.NewCustomPaddedVBoxLayout(0),
-			container.NewHBox(widget.NewLabel("Latest version:"), layout.NewSpacer(), container.NewStack(spinner, remoteItem)),
-			container.NewHBox(widget.NewLabel("Current version:"), layout.NewSpacer(), currentVersionItem),
+			container.NewHBox(widget.NewLabel(lang.L("Latest version")), layout.NewSpacer(), container.NewStack(spinner, remoteItem)),
+			container.NewHBox(widget.NewLabel(lang.L("Current version")), layout.NewSpacer(), currentVersionItem),
 		),
 		container.NewHBox(
 			layout.NewSpacer(),
-			widget.NewHyperlink("Website", doc),
-			widget.NewHyperlink("Downloads", download),
+			widget.NewHyperlink(lang.L("Website"), doc),
+			widget.NewHyperlink(lang.L("Downloads"), download),
 			layout.NewSpacer(),
 		),
 		widget.NewSeparator(),
 		container.NewHBox(
 			layout.NewSpacer(),
-			widget.NewLabel("Thanks for using this app!"),
+			widget.NewLabel(lang.L("Thanks for using this application!")),
 			layout.NewSpacer(),
 		),
 	)
 
-	d := dialog.NewCustom("About", "Close", content, win)
+	d := dialog.NewCustom(lang.L("About"), lang.L("Close"), content, win)
 	d.Resize(fyne.NewSize(d.MinSize().Width*1.3, d.MinSize().Height))
 	d.Show()
 }
@@ -88,16 +89,16 @@ func ShowUserDataDialog(app fyne.App, win fyne.Window) {
 		path string
 	}
 	items := make([]item, 0)
-	items = append(items, item{"Settings", filepath.Join(app.Storage().RootURI().Path(), "preferences.json")})
-	items = append(items, item{"Interface Settings", filepath.Join(filepath.Dir(app.Storage().RootURI().Path()), "settings.json")})
-	items = append(items, item{"Application logs", filepath.Join(app.Storage().RootURI().Path(), app.Metadata().Name+".log")})
+	items = append(items, item{lang.L("Settings"), filepath.Join(app.Storage().RootURI().Path(), "preferences.json")})
+	items = append(items, item{lang.L("Interface Settings"), filepath.Join(filepath.Dir(app.Storage().RootURI().Path()), "settings.json")})
+	items = append(items, item{lang.L("Application logs"), filepath.Join(app.Storage().RootURI().Path(), app.Metadata().Name+".log")})
 
 	form := widget.NewForm()
 
 	for _, it := range items {
 		form.Append(it.name, makePathEntry(app.Clipboard(), it.path))
 	}
-	d := dialog.NewCustom("User data", "Close", form, win)
+	d := dialog.NewCustom(lang.L("User data"), lang.L("Close"), form, win)
 	d.Show()
 }
 
@@ -106,5 +107,5 @@ func makePathEntry(cb fyne.Clipboard, path string) *fyne.Container {
 	return container.NewHBox(
 		widget.NewLabel(cleanedPath),
 		layout.NewSpacer(),
-		widget.NewButtonWithIcon("Copy", theme.ContentCopyIcon(), func() { cb.SetContent(cleanedPath) }))
+		widget.NewButtonWithIcon(lang.L("Copy"), theme.ContentCopyIcon(), func() { cb.SetContent(cleanedPath) }))
 }

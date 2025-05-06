@@ -6,10 +6,9 @@ import (
 	"fyne.io/fyne/v2"
 	fyneSettings "fyne.io/fyne/v2/cmd/fyne_settings/settings"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/lang"
 	"fyne.io/fyne/v2/widget"
 
-	"freenahiFront/internal/account"
-	"freenahiFront/internal/animation"
 	"freenahiFront/internal/collection"
 	"freenahiFront/internal/settings"
 	"freenahiFront/internal/topmenu"
@@ -29,10 +28,6 @@ var (
 			"Welcome",
 			welcome.WelcomeScreen,
 		},
-		"animations": {
-			"Animations",
-			animation.MakeAnimationScreen,
-		},
 		"collections": {
 			"Collections",
 			collection.CollectionScreen,
@@ -49,39 +44,35 @@ var (
 			"Tree",
 			collection.MakeTreeTab,
 		},
-		"accounts": {
-			"Accounts",
-			account.AccountScreen,
-		},
 	}
 
 	// TutorialIndex  defines how our tutorials should be laid out in the index tree
 	TutorialIndex = map[string][]string{
-		"":            {"welcome", "collections", "animations", "accounts"},
+		"":            {"welcome", "collections"},
 		"collections": {"list", "table", "tree"},
 	}
 )
 
 func NewTopMenu(app fyne.App, topWindow fyne.Window) *fyne.MainMenu {
 	uiFyneSettings := func() {
-		w := app.NewWindow("Fyne Settings")
+		w := app.NewWindow(lang.L("Interface Settings"))
 		w.SetContent(fyneSettings.NewSettings().LoadAppearanceScreen(w))
 		w.Resize(fyne.NewSize(440, 520))
 		w.Show()
 	}
 
-	helpMenu := fyne.NewMenu("Settings",
-		fyne.NewMenuItem("Interface Settings", uiFyneSettings),
-		fyne.NewMenuItem("General Settings", func() { settings.NewSettings(app, topWindow) }),
-		fyne.NewMenuItem("User data", func() { topmenu.ShowUserDataDialog(app, topWindow) }),
-		fyne.NewMenuItem("About", func() { topmenu.ShowAboutDialog(app, topWindow) }),
+	helpMenu := fyne.NewMenu(lang.L("Settings"),
+		fyne.NewMenuItem(lang.L("Interface Settings"), uiFyneSettings),
+		fyne.NewMenuItem(lang.L("General Settings"), func() { settings.NewSettings(app, topWindow) }),
+		fyne.NewMenuItem(lang.L("User data"), func() { topmenu.ShowUserDataDialog(app, topWindow) }),
+		fyne.NewMenuItem(lang.L("About"), func() { topmenu.ShowAboutDialog(app, topWindow) }),
 		fyne.NewMenuItemSeparator(),
-		fyne.NewMenuItem("Documentation", func() {
+		fyne.NewMenuItem(lang.L("Documentation"), func() {
 			u, _ := url.Parse("https://soragxyz.github.io/freenahi/")
 			_ = app.OpenURL(u)
 		}),
 		fyne.NewMenuItemSeparator(),
-		fyne.NewMenuItem("Contribute", func() {
+		fyne.NewMenuItem(lang.L("Contribute"), func() {
 			u, _ := url.Parse("https://soragxyz.github.io/freenahi/other/contribute/")
 			_ = app.OpenURL(u)
 		}),

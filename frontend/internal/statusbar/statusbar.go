@@ -12,6 +12,7 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/driver/desktop"
+	"fyne.io/fyne/v2/lang"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
@@ -52,7 +53,7 @@ func NewStatusBar(app fyne.App, parentWin fyne.Window) *StatusBar {
 	backendInfo := &backendInfo{
 		remoteBackendVersionItem:  widget.NewLabel(""),
 		currentBackendVersionItem: widget.NewLabel(""),
-		backendStatusItem:         widget.NewLabel("OK"),
+		backendStatusItem:         widget.NewLabel(""),
 		remoteSpinner:             widget.NewActivity(),
 		currentSpinner:            widget.NewActivity(),
 	}
@@ -64,7 +65,7 @@ func NewStatusBar(app fyne.App, parentWin fyne.Window) *StatusBar {
 
 	statusBar.startGoroutines(app, parentWin, backendInfo)
 
-	statusBar.backendStatus = NewStatusBarItem(theme.NewWarningThemedResource(theme.MediaRecordIcon()), "Contacting backend...", func() {
+	statusBar.backendStatus = NewStatusBarItem(theme.NewWarningThemedResource(theme.MediaRecordIcon()), lang.L("Contacting backend"), func() {
 		statusBar.showBackendDialog(parentWin, backendInfo)
 	})
 
@@ -79,12 +80,12 @@ func (a *StatusBar) showBackendDialog(parentWin fyne.Window, backendInfo *backen
 		container.New(
 			layout.NewCustomPaddedVBoxLayout(0),
 			container.NewHBox(
-				widget.NewLabel("Latest version:"),
+				widget.NewLabel(lang.L("Latest version")),
 				layout.NewSpacer(),
 				container.NewStack(backendInfo.remoteSpinner, backendInfo.remoteBackendVersionItem),
 			),
 			container.NewHBox(
-				widget.NewLabel("Current version:"),
+				widget.NewLabel(lang.L("Current version")),
 				layout.NewSpacer(),
 				container.NewStack(backendInfo.currentSpinner, backendInfo.currentBackendVersionItem),
 			),
@@ -93,7 +94,7 @@ func (a *StatusBar) showBackendDialog(parentWin fyne.Window, backendInfo *backen
 		container.NewHBox(layout.NewSpacer(), backendInfo.backendStatusItem, layout.NewSpacer()),
 	)
 
-	d := dialog.NewCustom("Backend version", "Close", content, parentWin)
+	d := dialog.NewCustom(lang.L("Backend version"), lang.L("Close"), content, parentWin)
 	d.Resize(fyne.NewSize(d.MinSize().Width*1.3, d.MinSize().Height))
 	d.Show()
 }
@@ -200,14 +201,14 @@ func (a *StatusBar) showApplicationUpdateInStatusBar(app fyne.App, parentWin fyn
 	}
 
 	// If an update is available, create a clickable hyperlink and display versions
-	hyperlink := widget.NewHyperlink("Application update available", nil)
+	hyperlink := widget.NewHyperlink(lang.L("Application update available"), nil)
 	hyperlink.OnTapped = func() {
 		c := container.NewVBox(
-			container.NewHBox(widget.NewLabel("Latest version:"), layout.NewSpacer(), widget.NewLabel(remoteVersion)),
-			container.NewHBox(widget.NewLabel("Current version:"), layout.NewSpacer(), widget.NewLabel(currentVersion)),
+			container.NewHBox(widget.NewLabel(lang.L("Latest version")), layout.NewSpacer(), widget.NewLabel(remoteVersion)),
+			container.NewHBox(widget.NewLabel(lang.L("Current version")), layout.NewSpacer(), widget.NewLabel(currentVersion)),
 		)
 
-		d := dialog.NewCustomConfirm("Update available", "Download", "Close", c, func(ok bool) {
+		d := dialog.NewCustomConfirm(lang.L("Application update available"), lang.L("Downloads"), lang.L("Close"), c, func(ok bool) {
 			if !ok {
 				return
 			}
@@ -244,16 +245,25 @@ func (a *StatusBar) showBackendInStatusBar(app fyne.App, backendInfo *backendInf
 		backendInfo.backendStatusItem.Text = ""
 
 		// Get remote backend version (ie the latest version available on github / dockerHub)
-		remoteBackendVersion, err := version.NewVersion("0.0.2") // ToDo: get the actual version of the backend when the docker image is finalized
+		remoteBackendVersion, err := version.NewVersion("0.0.1") // ToDo: get the actual version of the backend when the docker image is finalized
 		if err != nil {
 			helper.Logger.Error().Err(err).Msg("Version error")
 		}
-		backendInfo.backendStatusItem.Text = "Successfully got the latest backend version available\n"
+		backendInfo.backendStatusItem.Text = lang.L("Got latest backend version available")
 		// ToDo: add error message
 		// backendInfo.backendStatusItem.Text = "Could not get the latest backend version available\n"
 
 		helper.Logger.Trace().Str("Remote backend version", remoteBackendVersion.String()).Msg("Latest backend version obtained")
 		backendInfo.remoteBackendVersionItem.Text = remoteBackendVersion.String()
+
+		// Update the UI if some changes are detected
+		if len(backendInfo.remoteBackendVersionItem.Text) != 0 {
+			fyne.Do(func() {
+				backendInfo.remoteBackendVersionItem.Refresh()
+				backendInfo.remoteSpinner.Hide()
+				backendInfo.remoteBackendVersionItem.Show()
+			})
+		}
 
 		// Get current backend version (ie the version you are currently using)
 		url := fmt.Sprintf("%s://%s:%s/version/", backendProtocol, backendIp, backendPort)
@@ -261,8 +271,9 @@ func (a *StatusBar) showBackendInStatusBar(app fyne.App, backendInfo *backendInf
 
 		if e, ok := err.(net.Error); ok && e.Timeout() { // Backend unreachable
 			helper.Logger.Error().Err(err).Msg("Timeout")
-			statusBarText = "Backend unreachable"
-			backendInfo.backendStatusItem.Text += "Timeout: " + err.Error()
+			statusBarText = lang.L("Backend unreachable")
+			backendInfo.backendStatusItem.Text += "Timeout: " + err.Error() + "\n\n"
+			backendInfo.backendStatusItem.Text += lang.L("Is IP correct")
 			backendInfo.backendStatusItem.Importance = widget.DangerImportance
 
 			fyne.Do(func() {
@@ -272,8 +283,8 @@ func (a *StatusBar) showBackendInStatusBar(app fyne.App, backendInfo *backendInf
 
 		} else if err != nil { // Backend Error
 			helper.Logger.Error().Err(err).Msg("Cannot run http get request")
-			statusBarText = "Backend Error"
-			backendInfo.backendStatusItem.Text += "Backend Error: " + err.Error()
+			statusBarText = lang.L("Backend Error")
+			backendInfo.backendStatusItem.Text += lang.L("Backend Error") + ": " + err.Error()
 			backendInfo.backendStatusItem.Importance = widget.DangerImportance
 
 			fyne.Do(func() {
@@ -295,13 +306,13 @@ func (a *StatusBar) showBackendInStatusBar(app fyne.App, backendInfo *backendInf
 
 			helper.Logger.Trace().Str("current backend version", currentBackendVersion.String()).Msg("Backend is reachable")
 			backendInfo.currentBackendVersionItem.Text = currentBackendVersion.String()
-			backendInfo.backendStatusItem.Text += "Successfully contacted the backend and got the version used.\n\n"
+			backendInfo.backendStatusItem.Text += lang.L("Got current backend version")
 
 			// ToDo: when latest version is implemented, modify this condition because
 			// we can get the currentVersion but not the remote
 			if currentBackendVersion.LessThan(remoteBackendVersion) { // backend can be updated
-				statusBarText = "Backend update available"
-				backendInfo.backendStatusItem.Text += "The backend can be updated."
+				statusBarText = lang.L("Backend update available")
+				backendInfo.backendStatusItem.Text += lang.L("Backend update available")
 				backendInfo.backendStatusItem.Importance = widget.MediumImportance
 
 				fyne.Do(func() {
@@ -309,8 +320,8 @@ func (a *StatusBar) showBackendInStatusBar(app fyne.App, backendInfo *backendInf
 					a.backendStatus.icon.SetResource(statusBarWarnIcon)
 				})
 			} else { // backend is up to date
-				statusBarText = "Backend OK"
-				backendInfo.backendStatusItem.Text += "The backend is up-to-date"
+				statusBarText = lang.L("Backend up-to-date")
+				backendInfo.backendStatusItem.Text += lang.L("Backend up-to-date")
 				backendInfo.backendStatusItem.Importance = widget.SuccessImportance
 				fyne.Do(func() {
 					backendInfo.backendStatusItem.Refresh()
@@ -320,14 +331,6 @@ func (a *StatusBar) showBackendInStatusBar(app fyne.App, backendInfo *backendInf
 		}
 
 		// Update the UI if some changes are detected
-		if len(backendInfo.remoteBackendVersionItem.Text) != 0 {
-			fyne.Do(func() {
-				backendInfo.remoteBackendVersionItem.Refresh()
-				backendInfo.remoteSpinner.Hide()
-				backendInfo.remoteBackendVersionItem.Show()
-			})
-		}
-
 		if len(backendInfo.currentBackendVersionItem.Text) != 0 {
 			fyne.Do(func() {
 				backendInfo.currentBackendVersionItem.Refresh()
