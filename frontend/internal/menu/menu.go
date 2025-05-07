@@ -7,11 +7,10 @@ import (
 	fyneSettings "fyne.io/fyne/v2/cmd/fyne_settings/settings"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/lang"
-	"fyne.io/fyne/v2/widget"
 
-	"freenahiFront/internal/collection"
 	"freenahiFront/internal/settings"
 	"freenahiFront/internal/topmenu"
+	"freenahiFront/internal/transactions"
 	"freenahiFront/internal/welcome"
 )
 
@@ -21,39 +20,7 @@ type Tutorial struct {
 	View  func(w fyne.Window) fyne.CanvasObject
 }
 
-var (
-	// Tutorials defines the metadata for each tutorial
-	Tutorials = map[string]Tutorial{
-		"welcome": {
-			"Welcome",
-			welcome.WelcomeScreen,
-		},
-		"collections": {
-			"Collections",
-			collection.CollectionScreen,
-		},
-		"list": {
-			"List",
-			collection.MakeListTab,
-		},
-		"table": {
-			"Table",
-			collection.MakeTableTab,
-		},
-		"tree": {
-			"Tree",
-			collection.MakeTreeTab,
-		},
-	}
-
-	// TutorialIndex  defines how our tutorials should be laid out in the index tree
-	TutorialIndex = map[string][]string{
-		"":            {"welcome", "collections"},
-		"collections": {"list", "table", "tree"},
-	}
-)
-
-func NewTopMenu(app fyne.App, topWindow fyne.Window) *fyne.MainMenu {
+func NewTopMenu(app fyne.App, win fyne.Window) *fyne.MainMenu {
 	uiFyneSettings := func() {
 		w := app.NewWindow(lang.L("Interface Settings"))
 		w.SetContent(fyneSettings.NewSettings().LoadAppearanceScreen(w))
@@ -63,9 +30,9 @@ func NewTopMenu(app fyne.App, topWindow fyne.Window) *fyne.MainMenu {
 
 	helpMenu := fyne.NewMenu(lang.L("Settings"),
 		fyne.NewMenuItem(lang.L("Interface Settings"), uiFyneSettings),
-		fyne.NewMenuItem(lang.L("General Settings"), func() { settings.NewSettings(app, topWindow) }),
-		fyne.NewMenuItem(lang.L("User data"), func() { topmenu.ShowUserDataDialog(app, topWindow) }),
-		fyne.NewMenuItem(lang.L("About"), func() { topmenu.ShowAboutDialog(app, topWindow) }),
+		fyne.NewMenuItem(lang.L("General Settings"), func() { settings.NewSettings(app, win) }),
+		fyne.NewMenuItem(lang.L("User data"), func() { topmenu.ShowUserDataDialog(app, win) }),
+		fyne.NewMenuItem(lang.L("About"), func() { topmenu.ShowAboutDialog(app, win) }),
 		fyne.NewMenuItemSeparator(),
 		fyne.NewMenuItem(lang.L("Documentation"), func() {
 			u, _ := url.Parse("https://soragxyz.github.io/freenahi/")
@@ -85,36 +52,12 @@ func NewTopMenu(app fyne.App, topWindow fyne.Window) *fyne.MainMenu {
 	)
 }
 
-func NewLeftMenu(app fyne.App, setTutorial func(tutorial Tutorial), win fyne.Window) fyne.CanvasObject {
+func NewLeftMenu(app fyne.App, win fyne.Window) *container.AppTabs {
+	tabs := container.NewAppTabs(
+		container.NewTabItem("Welcome", welcome.NewWelcomeScreen()),
+		container.NewTabItem("Transactions", transactions.NewTransactionScreen(app)),
+	)
+	tabs.SetTabLocation(container.TabLocationLeading)
 
-	tree := &widget.Tree{
-		ChildUIDs: func(uid string) []string {
-			return TutorialIndex[uid]
-		},
-		IsBranch: func(uid string) bool {
-			children, ok := TutorialIndex[uid]
-
-			return ok && len(children) > 0
-		},
-		CreateNode: func(branch bool) fyne.CanvasObject {
-			return widget.NewLabel("Collection Widgets")
-		},
-		UpdateNode: func(uid string, branch bool, obj fyne.CanvasObject) {
-			t, ok := Tutorials[uid]
-			if !ok {
-				fyne.LogError("Missing tutorial panel: "+uid, nil)
-				return
-			}
-			obj.(*widget.Label).SetText(t.Title)
-		},
-		OnSelected: func(uid string) {
-			if t, ok := Tutorials[uid]; ok {
-				setTutorial(t)
-			}
-		},
-	}
-
-	// Default to the welcome Menu
-	tree.Select("welcome")
-	return container.NewBorder(nil, nil, nil, nil, tree)
+	return tabs
 }

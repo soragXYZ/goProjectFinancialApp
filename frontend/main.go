@@ -59,23 +59,13 @@ func main() {
 
 	w.SetMainMenu(menu.NewTopMenu(fyneApp, w))
 
-	content := container.NewStack()
-
-	setTutorial := func(t menu.Tutorial) {
-		content.Objects = []fyne.CanvasObject{t.View(w)}
-		content.Refresh()
-	}
-
-	tutorial := container.NewBorder(nil, nil, nil, nil, content)
-
-	// Split between the navigation menu on the left and the content of the current window on the right
-	split := container.NewHSplit(menu.NewLeftMenu(fyneApp, setTutorial, w), tutorial)
-	split.Offset = 0.2
-
-	statusBar := statusbar.NewStatusBar(fyneApp, w)
-
-	view := container.NewBorder(nil, statusBar, nil, nil, split)
-	w.SetContent(view)
+	w.SetContent(container.NewBorder(
+		nil,
+		statusbar.NewStatusBar(fyneApp, w),
+		nil,
+		nil,
+		menu.NewLeftMenu(fyneApp, w),
+	))
 
 	// When clicking exit on the window (reduce, fullscreen and exit icons)
 	w.SetCloseIntercept(func() {

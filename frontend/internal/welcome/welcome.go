@@ -10,7 +10,7 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
-func WelcomeScreen(_ fyne.Window) fyne.CanvasObject {
+func NewWelcomeScreen() fyne.CanvasObject {
 	logo := canvas.NewImageFromFile("./Icon.png")
 	logo.FillMode = canvas.ImageFillContain
 	if fyne.CurrentDevice().IsMobile() {
