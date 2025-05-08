@@ -61,87 +61,72 @@ func getTransactions(page int, app fyne.App) []Transaction {
 func NewTransactionScreen(app fyne.App, win fyne.Window) fyne.CanvasObject {
 
 	var txs = getTransactions(1, app) // Fill txs with the first page of txs
-
-	list := newTransactionList(txs, app, win)
-
-	return list
-}
-
-// NewSettingList returns a new SettingList widget.
-func newTransactionList(txs []Transaction, app fyne.App, win fyne.Window) *widget.List {
-
-	var txsPerPage = 50 // Default number of txs returned by the backend when querrying the endpoint "/transaction"
+	var txsPerPage = 50               // Default number of txs returned by the backend when querrying the endpoint "/transaction"
 	var reachedDataEnd = false
 	var threshold = 5
 
-	customListWidget := &widget.List{}
+	txList := widget.NewList(
+		func() int {
+			return len(txs)
+		},
+		func() fyne.CanvasObject {
+			return container.NewHBox(
+				widget.NewIcon(theme.RadioButtonIcon()),
+				widget.NewLabel("date"),
+				widget.NewLabel("value"),
+				widget.NewLabel("type"),
+				widget.NewLabel("name"), // ToDo: use a scroll container for long text
+			)
+		},
+		func(i widget.ListItemID, o fyne.CanvasObject) {
+			hbox := o.(*fyne.Container).Objects
+			txPinned := hbox[0].(*widget.Icon)
+			txDate := hbox[1].(*widget.Label)
+			txValue := hbox[2].(*widget.Label)
+			txType := hbox[3].(*widget.Label)
+			txName := hbox[4].(*widget.Label)
 
-	customListWidget.Length = func() int {
-		return len(txs)
-	}
-
-	customListWidget.CreateItem = func() fyne.CanvasObject {
-		return container.NewHBox(
-			widget.NewIcon(theme.RadioButtonIcon()),
-			widget.NewLabel("date"),
-			widget.NewLabel("value"),
-			widget.NewLabel("type"),
-			widget.NewLabel("name"), // ToDo: use a scroll container for long text
-		)
-	}
-
-	customListWidget.UpdateItem = func(i widget.ListItemID, o fyne.CanvasObject) {
-		hbox := o.(*fyne.Container).Objects
-		txPinned := hbox[0].(*widget.Icon)
-		txDate := hbox[1].(*widget.Label)
-		txValue := hbox[2].(*widget.Label)
-		txType := hbox[3].(*widget.Label)
-		txName := hbox[4].(*widget.Label)
-
-		parsedTxDate, err := time.Parse("2006-01-02 15:04:05", txs[i].Date)
-		if err != nil {
-			helper.Logger.Error().Err(err).Msgf("Cannot parse date %s", txs[i].Date)
-		}
-
-		if txs[i].Pinned {
-			txPinned.SetResource(theme.RadioButtonCheckedIcon())
-		}
-
-		txType.SetText(txs[i].Transaction_type)
-		txDate.SetText(parsedTxDate.Format("2006-01-02"))
-		txValue.SetText(fmt.Sprintf("%.2f", txs[i].Value))
-		txName.SetText(txs[i].Original_wording)
-
-		// Load new items in the list when the user scrolled near the bottom of the page => infinite scrolling
-		// We ask more data from the backend if we only have less than "threshold" txs left to display
-		if i > len(txs)-threshold && !reachedDataEnd {
-			pageRequested := len(txs)/txsPerPage + 1
-			newTxs := getTransactions(pageRequested, app)
-
-			// We have retrieved every transaction if the backend sent less txs than the default number per page
-			if len(newTxs) < txsPerPage {
-				reachedDataEnd = true
+			parsedTxDate, err := time.Parse("2006-01-02 15:04:05", txs[i].Date)
+			if err != nil {
+				helper.Logger.Error().Err(err).Msgf("Cannot parse date %s", txs[i].Date)
 			}
-			txs = append(txs, newTxs...)
-		}
-	}
+
+			if txs[i].Pinned {
+				txPinned.SetResource(theme.RadioButtonCheckedIcon())
+			} else {
+				txPinned.SetResource(theme.RadioButtonIcon())
+			}
+
+			txType.SetText(txs[i].Transaction_type)
+			txDate.SetText(parsedTxDate.Format("2006-01-02"))
+			txValue.SetText(fmt.Sprintf("%.2f", txs[i].Value))
+			txName.SetText(txs[i].Original_wording)
+
+			// Load new items in the list when the user scrolled near the bottom of the page => infinite scrolling
+			// We ask more data from the backend if we only have less than "threshold" txs left to display
+			if i > len(txs)-threshold && !reachedDataEnd {
+				pageRequested := len(txs)/txsPerPage + 1
+				newTxs := getTransactions(pageRequested, app)
+
+				// We have retrieved every transaction if the backend sent less txs than the default number per page
+				if len(newTxs) < txsPerPage {
+					reachedDataEnd = true
+				}
+				txs = append(txs, newTxs...)
+			}
+		},
+	)
 
 	// If tx is selected, open a dialog box to modify it if needed
-	customListWidget.OnSelected = func(id widget.ListItemID) {
-		if id >= len(txs) {
-			customListWidget.UnselectAll()
-			return
-		}
-		tx := txs[id]
+	txList.OnSelected = func(id widget.ListItemID) {
 
 		detailsItem := widget.NewEntry()
-		detailsItem.SetText(tx.Original_wording)
-		// detailsItem.Validator = validation.NewRegexp(`^[A-Za-z0-9_-]+$`, "username can only contain letters, numbers, '_', and '-'")
+		detailsItem.SetText(txs[id].Original_wording) // ToDo: add regex and validator
 
 		pinnedItem := widget.NewCheck("", func(value bool) {
-			tx.Pinned = value
+			txs[id].Pinned = value
 		})
-		pinnedItem.Checked = tx.Pinned
+		pinnedItem.Checked = txs[id].Pinned
 
 		items := []*widget.FormItem{
 			widget.NewFormItem("Details", detailsItem),
@@ -152,8 +137,9 @@ func newTransactionList(txs []Transaction, app fyne.App, win fyne.Window) *widge
 			if !b {
 				return
 			}
-			tx.Original_wording = detailsItem.Text // replaced by the user input
-			updateTransaction(tx, app)
+			txs[id].Original_wording = detailsItem.Text // replaced by the user input
+			txList.RefreshItem(id)
+			updateTransaction(txs[id], app)
 		}, win)
 
 		d.Resize(fyne.NewSize(d.MinSize().Width*2, d.MinSize().Height))
@@ -161,9 +147,7 @@ func newTransactionList(txs []Transaction, app fyne.App, win fyne.Window) *widge
 
 	}
 
-	customListWidget.ExtendBaseWidget(customListWidget)
-
-	return customListWidget
+	return txList
 }
 
 func updateTransaction(tx Transaction, app fyne.App) {
