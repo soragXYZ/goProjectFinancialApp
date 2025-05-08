@@ -35,7 +35,10 @@ func New() *http.ServeMux {
 
 	router.HandleFunc("GET /loan/", middleware.Log(middleware.Whitelisted(loan.GetLoans)))
 
-	router.HandleFunc("GET /transaction/", middleware.Log(middleware.Whitelisted(transaction.GetTransactions)))
+	router.HandleFunc("POST /transaction/", middleware.Log(middleware.Whitelisted(transaction.CreateTransaction)))
+	router.HandleFunc("GET /transaction/", middleware.Log(middleware.Whitelisted(transaction.ReadTransaction)))
+	router.HandleFunc("PUT /transaction/{id}", middleware.Log(middleware.Whitelisted(transaction.UpdateTransaction)))
+	router.HandleFunc("DELETE /transaction/{id}", middleware.Log(middleware.Whitelisted(transaction.DeleteTransaction)))
 
 	router.HandleFunc("POST /auth/permanentUserToken/", middleware.Log(middleware.Whitelisted(auth.CreatePermanentUserToken)))
 	router.HandleFunc("GET /auth/permanentUserToken/", middleware.Log(middleware.Whitelisted(auth.GetPermanentUserToken)))

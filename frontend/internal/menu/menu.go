@@ -55,7 +55,7 @@ func NewTopMenu(app fyne.App, win fyne.Window) *fyne.MainMenu {
 func NewLeftMenu(app fyne.App, win fyne.Window) *container.AppTabs {
 	tabs := container.NewAppTabs(
 		container.NewTabItem("Welcome", welcome.NewWelcomeScreen()),
-		container.NewTabItem("Transactions", transactions.NewTransactionScreen(app)),
+		container.NewTabItem("Transactions", transactions.NewTransactionScreen(app, win)),
 	)
 	tabs.SetTabLocation(container.TabLocationLeading)
 

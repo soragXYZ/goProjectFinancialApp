@@ -7,6 +7,7 @@ CREATE TABLE tx (
     tx_value FLOAT NOT NULL,
     tx_type VARCHAR(255) NOT NULL,
     original_wording VARCHAR(255) NOT NULL,
+    pinned BOOL NOT NULL DEFAULT FALSE,
 
     PRIMARY KEY (`tx_id`),
     FOREIGN KEY (`account_id`) REFERENCES bankAccount(`account_id`)
