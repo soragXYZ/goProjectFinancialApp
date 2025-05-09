@@ -27,6 +27,8 @@
 	"Contribute": "Contribute",
 	"Copy": "Copy",
 	"Current version": "Current version:",
+	"Date":"Date",
+	"Details": "Details",
 	"Documentation": "Documentation",
 	"Downloads": "Downloads",
 	"Fullscreen details": "Application will go fullscreen",
@@ -44,6 +46,7 @@
 	"Log level details": "Choose log level details",
 	"Log level": "Log level",
 	"More": "More",
+	"Pinned": "Pinned",
 	"Quit": "Quit",
 	"Reset to default values": "Reset to default values",
 	"Reset": "Reset",
@@ -52,6 +55,8 @@
 	"Thanks for using this application!": "Thanks for using this application!",
 	"Theme details": "Set theme color to dark or light",
 	"Theme": "Theme",
+	"Type": "Type",
 	"User data": "User data",
+	"Value": "Value",
 	"Website": "Website"
 }

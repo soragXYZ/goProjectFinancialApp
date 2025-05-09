@@ -27,6 +27,8 @@
 	"Contribute": "Contribuer",
 	"Copy": "Copier",
 	"Current version": "Version actuelle:",
+	"Date":"Date",
+	"Details": "Détails",
 	"Documentation": "Documentation",
 	"Downloads": "Téléchargements",
 	"Fullscreen details": "L'application passera en plein écran",
@@ -44,6 +46,7 @@
 	"Log level details": "Choisir le niveau de détails des logs",
 	"Log level": "Niveau des logs",
 	"More": "Plus",
+	"Pinned": "Pointée",
 	"Quit": "Quitter",
 	"Reset to default values": "Remettre les valeurs par défaut",
 	"Reset": "Réinitialiser",
@@ -52,6 +55,8 @@
 	"Thanks for using this application!": "Merci d'utiliser cette application !",
 	"Theme details": "Mettre le thème sombre ou clair",
 	"Theme": "Thème",
+	"Type": "Type",
 	"User data": "Données utilisateur",
+	"Value": "Montant",
 	"Website": "Site web"
 }
