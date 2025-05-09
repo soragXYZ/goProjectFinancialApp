@@ -3,6 +3,7 @@ package settings
 import (
 	"fmt"
 	"strconv"
+	"time"
 
 	"freenahiFront/internal/helper"
 	customTheme "freenahiFront/internal/theme"
@@ -369,13 +370,18 @@ func NewSettingList(items []SettingItem) *widget.List {
 		}
 		it := items[id]
 		if it.onSelected == nil {
-			w.UnselectAll()
+			w.Unselect(id)
 			return
 		}
 		it.onSelected(it, func() {
 			w.RefreshItem(id)
 		})
-		w.UnselectAll()
+		go func() {
+			time.Sleep(200 * time.Millisecond)
+			fyne.Do(func() {
+				w.Unselect(id)
+			})
+		}()
 	}
 	w.HideSeparators = true
 	w.ExtendBaseWidget(w)

@@ -13,6 +13,7 @@ import (
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/data/validation"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/lang"
 	"fyne.io/fyne/v2/layout"
@@ -28,6 +29,10 @@ const (
 	valueColumn
 	typeColumn
 	detailsColumn
+	deleteColumn
+
+	unselectTime = 200 * time.Millisecond
+	detailsRegex = `^[A-Za-z0-9_-]{1,50}$`
 )
 
 // The struct which is returned by the backend
@@ -44,12 +49,23 @@ type Transaction struct {
 func NewTransactionScreen(app fyne.App, win fyne.Window) fyne.CanvasObject {
 
 	var (
-		pinnedLabel          = widget.NewLabel(lang.L("Pinned"))
-		dateLabel            = widget.NewLabel(lang.L("Date"))
-		valueLabel           = widget.NewLabel(lang.L("Value"))
-		typeLabel            = widget.NewLabel(lang.L("Type"))
+		pinnedLabel = widget.NewLabel(lang.L("Pinned"))
+
+		dateLabel         = widget.NewLabel(lang.L("Date"))
+		testDateLabelSize = widget.NewLabel("XXXX-YY-ZZ").MinSize().Width
+
+		valueLabel         = widget.NewLabel(lang.L("Value"))
+		testValueLabelSize = widget.NewLabel("-123456123.00").MinSize().Width
+
+		typeLabel         = widget.NewLabel(lang.L("Type"))
+		testTypeLabelSize = widget.NewLabel("loan_repayment").MinSize().Width
+
 		detailsLabel         = widget.NewLabel(lang.L("Details"))
 		testDetailsLabelSize = widget.NewLabel("CB DEBIT IMMEDIAT UBER EATS").MinSize().Width
+
+		deleteLabel = widget.NewLabel(lang.L("Delete"))
+
+		testIconSize = widget.NewIcon(theme.RadioButtonCheckedIcon()).MinSize().Width
 	)
 
 	// Fill txs with the first page of txs. The first tx is a special item only used for the table header (no real data)
@@ -59,23 +75,23 @@ func NewTransactionScreen(app fyne.App, win fyne.Window) fyne.CanvasObject {
 	txs = append(txs, getTransactions(1, app)...)
 	var txsPerPage = 50 // Default number of txs returned by the backend when querrying the endpoint "/transaction"
 	var reachedDataEnd = false
-	var threshold = 5
+	var threshold = 5 // Ask more data from the backend if we only have less than "threshold" txs left to display
 
 	txList := widget.NewTable(
 		func() (int, int) {
-			return len(txs), 5 // The number of column to display, ie the number of iota const value (icon, date, value, type, details)
+			return len(txs), 6 // The number of column to display, ie the number of iota const value (icon, date, value, type, details, delete)
 		},
 		func() fyne.CanvasObject {
 			return container.NewHBox(widget.NewLabel("template"))
 		},
-		func(i widget.TableCellID, o fyne.CanvasObject) {
+		func(id widget.TableCellID, o fyne.CanvasObject) {
 
 			// Clean the cell from the previous value
 			o.(*fyne.Container).RemoveAll()
 
 			// If we are on the first row, we set special values and we will pin this row to create a header with it
-			if i.Row == 0 {
-				switch i.Col {
+			if id.Row == 0 {
+				switch id.Col {
 				case pinnedColumn:
 					AddHAligned(o, pinnedLabel)
 
@@ -91,38 +107,45 @@ func NewTransactionScreen(app fyne.App, win fyne.Window) fyne.CanvasObject {
 				case detailsColumn:
 					AddHAligned(o, detailsLabel)
 
+				case deleteColumn:
+					AddHAligned(o, deleteLabel)
+
 				default:
 					helper.Logger.Fatal().Msg("Too much column in the grid")
 				}
 				return
 			}
 
-			// Update the cell by adding content according to its "type" (icon, date, value, type, details)
-			switch i.Col {
+			// Update the cell by adding content according to its "type" (icon, date, value, type, details, delete)
+			switch id.Col {
 			case pinnedColumn:
-				if txs[i.Row].Pinned {
+				if txs[id.Row].Pinned {
 					AddHAligned(o, widget.NewIcon(theme.RadioButtonCheckedIcon()))
 				} else {
 					AddHAligned(o, widget.NewIcon(theme.RadioButtonIcon()))
 				}
 
 			case dateColumn:
-				parsedTxDate, err := time.Parse("2006-01-02 15:04:05", txs[i.Row].Date)
+				parsedTxDate, err := time.Parse("2006-01-02 15:04:05", txs[id.Row].Date)
 				if err != nil {
-					helper.Logger.Error().Err(err).Msgf("Cannot parse date %s", txs[i.Row].Date)
+					helper.Logger.Error().Err(err).Msgf("Cannot parse date %s", txs[id.Row].Date)
 				}
 				AddHAligned(o, widget.NewLabel(parsedTxDate.Format("2006-01-02")))
 
 			case valueColumn:
-				AddHAligned(o, widget.NewLabel(fmt.Sprintf("%.2f", txs[i.Row].Value)))
+				AddHAligned(o, widget.NewLabel(fmt.Sprintf("%.2f", txs[id.Row].Value)))
 
 			case typeColumn:
-				AddHAligned(o, widget.NewLabel(txs[i.Row].Transaction_type))
+				// ToDo: display an icon instead of a text ? More user friendly
+				AddHAligned(o, widget.NewLabel(txs[id.Row].Transaction_type))
 
 			case detailsColumn:
-				scroller := container.NewHScroll(widget.NewLabel(txs[i.Row].Original_wording))
+				scroller := container.NewHScroll(widget.NewLabel(txs[id.Row].Original_wording))
 				scroller.SetMinSize(fyne.NewSize(testDetailsLabelSize, scroller.MinSize().Height))
 				AddHAligned(o, scroller)
+
+			case deleteColumn:
+				AddHAligned(o, widget.NewIcon(theme.DeleteIcon()))
 
 			default:
 				helper.Logger.Fatal().Msg("Too much column in the transaction grid")
@@ -130,7 +153,7 @@ func NewTransactionScreen(app fyne.App, win fyne.Window) fyne.CanvasObject {
 
 			// Load new items in the list when the user scrolled near the bottom of the page => infinite scrolling
 			// We ask more data from the backend if we only have less than "threshold" txs left to display
-			if i.Row > len(txs)-threshold && !reachedDataEnd {
+			if id.Row > len(txs)-threshold && !reachedDataEnd {
 				pageRequested := len(txs)/txsPerPage + 1
 				newTxs := getTransactions(pageRequested, app)
 
@@ -150,62 +173,81 @@ func NewTransactionScreen(app fyne.App, win fyne.Window) fyne.CanvasObject {
 			return
 		}
 
-		detailsItem := widget.NewEntry()
-		detailsItem.SetText(txs[id.Row].Original_wording) // ToDo: add regex and validator
+		// Update the cell when selected by modifying content according to its "type" (icon, date, value, type, details, delete)
+		switch id.Col {
+		case pinnedColumn:
+			txs[id.Row].Pinned = !txs[id.Row].Pinned
+			txList.RefreshItem(widget.TableCellID{Row: id.Row, Col: pinnedColumn})
+			updateTransaction(txs[id.Row], app)
 
-		pinnedItem := widget.NewCheck("", func(value bool) {
-			txs[id.Row].Pinned = value
-		})
-		pinnedItem.Checked = txs[id.Row].Pinned
+		case dateColumn:
 
-		items := []*widget.FormItem{
-			widget.NewFormItem("Details", detailsItem),
-			widget.NewFormItem("Pinned", pinnedItem),
+		case valueColumn:
+
+		case typeColumn:
+
+		case detailsColumn:
+
+			detailsItem := widget.NewEntry()
+			detailsItem.SetText(txs[id.Row].Original_wording)
+			detailsItem.Validator = validation.NewRegexp(detailsRegex, lang.L("Regex tx details"))
+
+			items := []*widget.FormItem{widget.NewFormItem(lang.L("Details"), detailsItem)}
+
+			d := dialog.NewForm(lang.L("Edit transaction"), lang.L("Update"), lang.L("Cancel"), items, func(b bool) {
+				if !b {
+					return
+				}
+
+				txs[id.Row].Original_wording = detailsItem.Text // replaced by the user input
+				txList.RefreshItem(widget.TableCellID{Row: id.Row, Col: detailsColumn})
+				updateTransaction(txs[id.Row], app)
+			}, win)
+
+			d.Resize(fyne.NewSize(d.MinSize().Width*2, d.MinSize().Height))
+			d.Show()
+
+		case deleteColumn:
+			// ToDo
+
+		default:
+			helper.Logger.Fatal().Msg("Too much column in the transaction grid")
 		}
 
-		d := dialog.NewForm("Edit transaction", "Update", "Cancel", items, func(b bool) {
-			if !b {
-				return
-			}
-			txs[id.Row].Original_wording = detailsItem.Text // replaced by the user input
-
-			// Refresh the whole row with the new data set by the user
-			txList.RefreshItem(widget.TableCellID{Row: id.Row, Col: pinnedColumn})
-			txList.RefreshItem(widget.TableCellID{Row: id.Row, Col: dateColumn})
-			txList.RefreshItem(widget.TableCellID{Row: id.Row, Col: valueColumn})
-			txList.RefreshItem(widget.TableCellID{Row: id.Row, Col: valueColumn})
-			txList.RefreshItem(widget.TableCellID{Row: id.Row, Col: detailsColumn})
-
-			// Call the backend to apply the change
-			updateTransaction(txs[id.Row], app)
-		}, win)
-
-		d.Resize(fyne.NewSize(d.MinSize().Width*2, d.MinSize().Height))
-		d.Show()
+		go func() {
+			time.Sleep(unselectTime)
+			fyne.Do(func() {
+				txList.Unselect(id)
+			})
+		}()
 
 	}
 
 	// We set the width of the columns, ie the max between the language name header size and actual value
 	// For example, the max between "Value" and "-123456123.00", or "Montant" and "-123456123.00" in french
 	txList.SetColumnWidth(pinnedColumn, float32(math.Max(
-		float64(widget.NewIcon(theme.RadioButtonCheckedIcon()).MinSize().Width),
+		float64(testIconSize),
 		float64(pinnedLabel.MinSize().Width))),
 	)
 	txList.SetColumnWidth(dateColumn, float32(math.Max(
-		float64(widget.NewLabel("XXXX-YY-ZZ").MinSize().Width),
+		float64(testDateLabelSize),
 		float64(dateLabel.MinSize().Width))),
 	)
 	txList.SetColumnWidth(valueColumn, float32(math.Max(
-		float64(widget.NewLabel("-123456123.00").MinSize().Width),
+		float64(testValueLabelSize),
 		float64(valueLabel.MinSize().Width))),
 	)
 	txList.SetColumnWidth(typeColumn, float32(math.Max(
-		float64(widget.NewLabel("loan_repayment").MinSize().Width),
+		float64(testTypeLabelSize),
 		float64(typeLabel.MinSize().Width))),
 	)
 	txList.SetColumnWidth(detailsColumn, float32(math.Max(
 		float64(testDetailsLabelSize),
 		float64(detailsLabel.MinSize().Width))),
+	)
+	txList.SetColumnWidth(deleteColumn, float32(math.Max(
+		float64(testIconSize),
+		float64(deleteLabel.MinSize().Width))),
 	)
 
 	txList.StickyRowCount = 1 // Basically, we are setting a table header because the first row contains special data
@@ -220,6 +262,7 @@ func AddHAligned(object fyne.CanvasObject, objectToAdd fyne.CanvasObject) {
 	object.(*fyne.Container).Add(layout.NewSpacer())
 }
 
+// ToDo: modify the function to return an error and display it if sth went wrong in the backend
 // Call the backend endpoint "/transaction" and retrieve txs of the selected page
 func getTransactions(page int, app fyne.App) []Transaction {
 
@@ -250,6 +293,7 @@ func getTransactions(page int, app fyne.App) []Transaction {
 	return txs
 }
 
+// ToDo: modify the function to return an error and display it if sth went wrong in the backend
 // Call the backend endpoint "/transaction" and update the specified tx
 func updateTransaction(tx Transaction, app fyne.App) {
 
