@@ -14,5 +14,5 @@
 
 * Frontend
 - Add a tutorial to create the backend and Powens account
-- Translate dialog options too
+- Screen transactions: add filter options
 - Remove kx-widget dependency ?

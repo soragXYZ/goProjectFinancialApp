@@ -2,6 +2,7 @@ package transaction
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -102,6 +103,7 @@ func UpdateTransaction(w http.ResponseWriter, r *http.Request) {
 func DeleteTransaction(w http.ResponseWriter, r *http.Request) {
 
 	txId := r.PathValue("id")
+	fmt.Print(txId)
 
 	var query string = "DELETE from tx WHERE tx_id=?"
 	_, err := config.DB.Exec(query, txId)

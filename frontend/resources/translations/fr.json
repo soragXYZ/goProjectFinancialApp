@@ -29,6 +29,7 @@
 	"Current version": "Version actuelle:",
 	"Date":"Date",
 	"Delete":"Supprimer",
+	"Delete confirmation": "Voulez-vous vraiment supprimer cette transaction ?\nAucun retour arrière possible.",
 	"Details": "Détails",
 	"Documentation": "Documentation",
 	"Downloads": "Téléchargements",
@@ -48,6 +49,7 @@
 	"Log level details": "Choisir le niveau de détails des logs",
 	"Log level": "Niveau des logs",
 	"More": "Plus",
+	"No": "No",
 	"Pinned": "Pointée",
 	"Quit": "Quitter",
 	"Regex tx details": "Doit utiliser des lettres, nombres, tirets ou underscore. Entre 1 et 50 caractères.",
@@ -62,5 +64,6 @@
 	"Update": "Mettre à jour",
 	"User data": "Données utilisateur",
 	"Value": "Montant",
-	"Website": "Site web"
+	"Website": "Site web",
+	"Yes": "Oui"
 }

@@ -29,6 +29,7 @@
 	"Current version": "Current version:",
 	"Date":"Date",
 	"Delete":"Delete",
+	"Delete confirmation": "Do you really want to delete this transaction ?\nThere is turning back",
 	"Details": "Details",
 	"Documentation": "Documentation",
 	"Downloads": "Downloads",
@@ -48,6 +49,7 @@
 	"Log level details": "Choose log level details",
 	"Log level": "Log level",
 	"More": "More",
+	"No": "No",
 	"Pinned": "Pinned",
 	"Quit": "Quit",
 	"Regex tx details": "Should use letters, number, hyphen or underscore. Between 1 and 50 characters",
@@ -62,5 +64,6 @@
 	"Update": "Update",
 	"User data": "User data",
 	"Value": "Value",
-	"Website": "Website"
+	"Website": "Website",
+	"Yes": "Yes"
 }

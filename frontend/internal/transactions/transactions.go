@@ -9,6 +9,7 @@ import (
 	"io"
 	"math"
 	"net/http"
+	"slices"
 	"time"
 
 	"fyne.io/fyne/v2"
@@ -208,7 +209,18 @@ func NewTransactionScreen(app fyne.App, win fyne.Window) fyne.CanvasObject {
 			d.Show()
 
 		case deleteColumn:
-			// ToDo
+			cnf := dialog.NewConfirm(lang.L("Delete"), lang.L("Delete confirmation"), func(b bool) {
+				if !b {
+					return
+				}
+
+				deleteTransaction(txs[id.Row], app)
+				txs = slices.Delete(txs, id.Row, id.Row+1) // delete the selected row only
+				txList.Refresh()
+			}, win)
+			cnf.SetDismissText(lang.L("Cancel"))
+			cnf.SetConfirmText(lang.L("Delete"))
+			cnf.Show()
 
 		default:
 			helper.Logger.Fatal().Msg("Too much column in the transaction grid")
@@ -318,6 +330,36 @@ func updateTransaction(tx Transaction, app fyne.App) {
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		helper.Logger.Error().Err(err).Msg("Cannot run http put request")
+		return
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusNoContent {
+		helper.Logger.Error().Msg(resp.Status)
+		return
+	}
+}
+
+// ToDo: modify the function to return an error and display it if sth went wrong in the backend
+// Call the backend endpoint "/transaction" and delete the specified tx
+func deleteTransaction(tx Transaction, app fyne.App) {
+
+	backendIp := app.Preferences().StringWithFallback(settings.PreferenceBackendIP, settings.BackendIPDefault)
+	backendProtocol := app.Preferences().StringWithFallback(settings.PreferenceBackendProtocol, settings.BackendProtocolDefault)
+	backendPort := app.Preferences().StringWithFallback(settings.PreferenceBackendPort, settings.BackendPortDefault)
+
+	url := fmt.Sprintf("%s://%s:%s/transaction/%d", backendProtocol, backendIp, backendPort, tx.Id)
+
+	req, err := http.NewRequest(http.MethodDelete, url, nil)
+	if err != nil {
+		helper.Logger.Error().Err(err).Msg("Cannot create new request")
+		return
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		helper.Logger.Error().Err(err).Msg("Cannot run http delete request")
 		return
 	}
 
